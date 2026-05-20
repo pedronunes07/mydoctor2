@@ -9,9 +9,8 @@
     <link href="{% static 'style.css' %}" rel="stylesheet">
 </head>
 <body>
-<nav class="navbar navbar-expand-md">
-  <a class="navbar-brand" href="{% url 'home' %}">My Doctor</a>
-</nav>
+{% include 'todos/_navbar.html' with voltar_url=voltar_url %}
+{% include 'todos/_messages.html' %}
 <div class="container mt-4">
     <h2 class="mb-3">Painel do Médico</h2>
     <div class="row mb-4">

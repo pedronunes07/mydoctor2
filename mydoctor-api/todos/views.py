@@ -1,11 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import TemplateView
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 from .models import Todo, Consulta, ChatRoom, ChatMessage, ChatSignal, Recording, Medico, Receita
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy
+from django.db.models import Q
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
@@ -44,6 +45,16 @@ class TodoCreateView(CreateView):
 class HomeView(TemplateView):
     template_name = 'todos/index.html'
 
+def health_view(request):
+    return JsonResponse({'status': 'ok'})
+
+
+def logout_view(request):
+    logout(request)
+    return redirect('home')
+
+
+@login_required
 def dashboard_view(request):
     context = {'voltar_url': reverse_lazy('home')}
     if request.user.is_authenticated:
@@ -257,9 +268,10 @@ def minhas_receitas_view(request):
 @login_required
 def chat_room_view(request, code):
     room = get_object_or_404(ChatRoom, code=code)
+    voltar = reverse_lazy('doctor_dashboard') if hasattr(request.user, 'medico') else reverse_lazy('dashboard')
     context = {
         'room_code': room.code,
-        'voltar_url': reverse_lazy('dashboard'),
+        'voltar_url': voltar,
         'invite_url': request.build_absolute_uri()
     }
     return render(request, 'todos/chat.html', context)
@@ -359,7 +371,9 @@ def upload_recording_api(request, code):
 # Lista de gravações
 @login_required
 def recorded_list_view(request):
-    recs = Recording.objects.select_related('room', 'uploaded_by').order_by('-created_at')
+    recs = Recording.objects.filter(
+        Q(uploaded_by=request.user) | Q(room__consulta__usuario=request.user)
+    ).select_related('room', 'uploaded_by').distinct().order_by('-created_at')
     context = { 'recordings': recs, 'voltar_url': reverse_lazy('dashboard') }
     return render(request, 'todos/recorded_list.html', context)
 

@@ -1,0 +1,45 @@
+<nav class="navbar navbar-expand-md">
+  <a class="navbar-brand" href="{% url 'home' %}">My Doctor</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'home' %}">Início</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'home' %}#planos">Planos</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'home' %}#seguranca">Segurança</a>
+      </li>
+      {% if user.is_authenticated %}
+        {% if user.medico %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'doctor_dashboard' %}">Painel Médico</a>
+          </li>
+        {% else %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'dashboard' %}">Serviços</a>
+          </li>
+        {% endif %}
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'logout' %}">Sair</a>
+        </li>
+      {% else %}
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'login' %}">Login</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'register' %}">Cadastro</a>
+        </li>
+      {% endif %}
+    </ul>
+    <div class="form-inline my-2 my-lg-0">
+      {% if voltar_url %}
+        <a class="btn btn-outline-success my-2 my-sm-0" href="{{ voltar_url }}">Voltar</a>
+      {% endif %}
+    </div>
+  </div>
+</nav>

@@ -17,33 +17,7 @@
   </head>
 
   <body>
-    <nav class="navbar navbar-expand-md">
-      <a class="navbar-brand" href="{% url 'dashboard' %}">My Doctor</a>
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-
-      <div class="collapse navbar-collapse" id="navbarsExampleDefault">
-        <ul class="navbar-nav mr-auto">
-          <li class="nav-item active">
-            <a class="nav-link" href="{% url 'dashboard' %}">Inicio <span class="sr-only">(current)</span></a>
-          </li>
-          <li class="nav-item active">
-            <a class="nav-link" href="#">Planos <span class="sr-only">(current)</span></a>
-          </li>
-          <li class="nav-item active">
-            <a class="nav-link" href="#">Segurança <span class="sr-only">(current)</span></a>
-          </li>
-          <li class="nav-item active">
-            <a class="nav-link" href="{% url 'login' %}" >Login <span class="sr-only">(current)</span></a>
-          </li>
-        </ul>
-        <form class="form-inline my-2 my-lg-0">
-          <input class="form-control mr-sm-2" type="text" placeholder="Barra de Pesquisa" aria-label="Barra_de_Pesquisa">
-          <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Pesquisar</button>
-        </form>
-      </div>
-    </nav>
+    {% include 'todos/_navbar.html' %}
 
     <main role="main">
       <div class="jumbotron">
@@ -57,7 +31,7 @@
             impacto na melhoria do acesso aos cuidados médicos, destacando a
             importância de inovações como o My Doctor na promoção da equidade e eficácia
             nos sistemas de saúde.</p>
-          <p><a class="btn btn-primary btn-lg" href="#" role="button">Descubra mais &raquo;</a></p>
+          <p><a class="btn btn-primary btn-lg" href="{% url 'register' %}" role="button">Criar conta &raquo;</a></p>
         </div>
       </div>
 
@@ -97,23 +71,23 @@
         </div>
     </section>
 
-      <div class="container">
+      <div class="container" id="planos">
         <div class="row">
           <div class="col-md-4">
             <h2>Precificação</h2>
             <p>MyDoctor: Sua saúde na palma da mão, com um preço que cabe no bolso! 
                 Cansado de enfrentar filas, burocracias e longas esperas para cuidar da sua saúde? O MyDoctor chegou para revolucionar a forma como você se relaciona com os serviços médicos! </p>
-            <p><a class="btn btn-secondary" href="#" role="button">Descubra mais &raquo;</a></p>
+            <p><a class="btn btn-secondary" href="{% url 'login' %}" role="button">Entrar &raquo;</a></p>
           </div>
           <div class="col-md-4">
             <h2>Funcionalidades</h2>
             <p>Agendamento de consultas, integração com planos de saúde, perfil do usuário, Conteúdo educativo personalizado, chat com médicos, prontuário eletrônico, Inteligência artificial para diagnóstico, realidade aumentada para visualização de exames, integração com dispositivos vestíveis e mais! </p>
-            <p><a class="btn btn-secondary" href="#" role="button">Descubra mais &raquo;</a></p>
+            <p><a class="btn btn-secondary" href="{% url 'dashboard' %}" role="button">Ver serviços &raquo;</a></p>
           </div>
-          <div class="col-md-4">
+          <div class="col-md-4" id="seguranca">
             <h2>Segurança</h2>
             <p>Implementação de protocolos robustos de segurança: Garantindo a proteção de dados dos usuários e a confiabilidade do aplicativo, Testes rigorosos: Garantindo que o aplicativo funcione sem falhas e ofereça uma experiência impecável aos usuários.</p>
-            <p><a class="btn btn-secondary" href="#" role="button">Descubra mais &raquo;</a></p>
+            <p><a class="btn btn-secondary" href="{% url 'home' %}#seguranca" role="button">Saiba mais &raquo;</a></p>
           </div>
         </div>
 

@@ -1,3 +1,5 @@
+import os
+
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
@@ -8,5 +10,5 @@ urlpatterns = [
     path('', include('todos.urls')),
 ]
 
-if settings.DEBUG:
+if settings.DEBUG or os.environ.get('VERCEL'):
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -6,8 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minhas Receitas e Atestados</title>
     <link href="{% static 'bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'style.css' %}" rel="stylesheet">
 </head>
 <body>
+{% include 'todos/_navbar.html' with voltar_url=voltar_url %}
+{% include 'todos/_messages.html' %}
 <div class="container mt-4">
     <h3>Receitas e Atestados</h3>
     <div class="list-group">

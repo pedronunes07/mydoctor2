@@ -46,6 +46,24 @@ O `mydoctor-api/vercel.json` já define install, build, WSGI e rotas — **não*
 - Home sem erro 404
 - CSS carregando (F12 → Network → `style.css` status 200)
 
+## Páginas do sistema (após login)
+
+| URL | Função |
+|-----|--------|
+| `/` | Home |
+| `/login/` | Login paciente (e-mail) ou médico (CRM) |
+| `/register/` | Cadastro |
+| `/dashboard/` | Serviços do paciente |
+| `/agendar-consulta/` | Agendar |
+| `/ver-consultas/` | Listar consultas |
+| `/chat/` | Criar/entrar no chat |
+| `/minhas-receitas/` | Receitas e atestados |
+| `/consultas-gravadas/` | Gravações |
+| `/medico/dashboard/` | Painel do médico |
+| `/health/` | Status da API |
+
+**Nota:** na Vercel o SQLite fica em `/tmp` (dados podem sumir entre deploys). Para produção persistente use Postgres.
+
 ## CSS sem estilo (página em branco / links azuis)
 
 O comando `npx plugins add vercel/vercel-plugin` **não** corrige CSS — é só um plugin opcional do Cursor/Vercel.

@@ -20,21 +20,8 @@ _vercel_url = os.environ.get('VERCEL_URL')
 if _vercel_url and _vercel_url not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(_vercel_url)
 
-if os.environ.get('VERCEL'):
-    DEBUG = os.environ.get('DEBUG', 'False').lower() in ('1', 'true', 'yes')
-    # Na Vercel o bundle serverless nem sempre inclui staticfiles/; servir da pasta fonte.
-    WHITENOISE_USE_FINDERS = True
-    WHITENOISE_ROOT = BASE_DIR / 'todos' / 'static' / 'todos'
-    CSRF_TRUSTED_ORIGINS = [
-        origin.strip()
-        for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
-        if origin.strip()
-    ]
-    if _vercel_url:
-        origin = f'https://{_vercel_url}'
-        if origin not in CSRF_TRUSTED_ORIGINS:
-            CSRF_TRUSTED_ORIGINS.append(origin)
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/dashboard/'
 
 # Application definition
 INSTALLED_APPS = [
@@ -120,6 +107,25 @@ STATICFILES_DIRS = [
 # Media (uploads)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+if os.environ.get('VERCEL'):
+    DEBUG = os.environ.get('DEBUG', 'False').lower() in ('1', 'true', 'yes')
+    DATABASES['default']['NAME'] = '/tmp/db.sqlite3'
+    MEDIA_ROOT = '/tmp/media'
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    WHITENOISE_USE_FINDERS = True
+    WHITENOISE_ROOT = BASE_DIR / 'todos' / 'static' / 'todos'
+    CSRF_TRUSTED_ORIGINS = [
+        origin.strip()
+        for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
+        if origin.strip()
+    ]
+    if _vercel_url:
+        origin = f'https://{_vercel_url}'
+        if origin not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(origin)
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
