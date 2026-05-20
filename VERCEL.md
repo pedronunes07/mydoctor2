@@ -11,7 +11,14 @@ Isso **não é causado pelo CSS**. A página 404 da Vercel aparece quando **Prod
 - **Root Directory:** `mydoctor-api` (recomendado)
 - **Framework Preset:** **Django** (não use "Other")
 
-Com isso, a Vercel usa `manage.py`, `pyproject.toml` (`[tool.vercel] entrypoint`) e roda `collectstatic` automaticamente. O `mydoctor-api/vercel.json` fica vazio de propósito.
+### Se o preset for **Other** (seu caso no print)
+
+O `mydoctor-api/vercel.json` já define install, build, WSGI e rotas — **não** use Redeploy do deploy antigo `6ebc0ed`.
+
+1. **Substituições de produção:** remova (use configurações do projeto)
+2. **Root Directory:** `mydoctor-api`
+3. Em **Deployments** → botão **Create Deployment** → branch `main` → commit mais recente
+4. Depois **Promote to Production** nesse deploy novo
 
 ## Settings → Build and Deployment
 
