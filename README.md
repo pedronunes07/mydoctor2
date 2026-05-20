@@ -22,10 +22,15 @@ API em http://127.0.0.1:8000 — health: `/health/`
 
 ### Deploy na Vercel
 
-1. Novo projeto → repositório **mydoctor2**
-2. **Root Directory:** `mydoctor-api`
-3. **Framework Preset:** Django
-4. Variáveis: `SECRET_KEY`, `DEBUG=False`
+1. Importar **pedronunes07/mydoctor2** → branch `main`
+2. **Framework Preset:** **Django** (não use "Other")
+3. **Root Directory:** clique em **Edit** e coloque `mydoctor-api` (não deixe `./`)
+4. **Environment Variables** (Produção):
+   - `SECRET_KEY` = uma chave longa aleatória
+   - `DEBUG` = `False`
+5. Clique em **Deploy** — no log deve aparecer commit recente e `Python 3.12`, não `Node.js 20.x`
+
+Se mantiver Root Directory `./`, o `vercel.json` na raiz tenta instalar deps em `mydoctor-api/`, mas o preset **Django** + pasta `mydoctor-api` é o recomendado.
 
 ## mydoctor (Expo)
 
