@@ -107,10 +107,10 @@ USE_I18N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'todos/templates/todos'),
+    BASE_DIR / 'todos' / 'static' / 'todos',
 ]
 
 # Media (uploads)
