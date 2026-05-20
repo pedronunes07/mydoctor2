@@ -1,0 +1,21 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "python3 -m pip install --upgrade pip && python3 -m pip install -r requirements.txt",
+  "buildCommand": "cd mydoctor-api && python3 manage.py collectstatic --noinput",
+  "builds": [
+    {
+      "src": "mydoctor-api/projeto/wsgi.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "mydoctor-api/projeto/wsgi.py"
+    }
+  ]
+}
