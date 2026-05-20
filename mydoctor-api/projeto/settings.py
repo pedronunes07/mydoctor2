@@ -22,6 +22,9 @@ if _vercel_url and _vercel_url not in ALLOWED_HOSTS:
 
 if os.environ.get('VERCEL'):
     DEBUG = os.environ.get('DEBUG', 'False').lower() in ('1', 'true', 'yes')
+    # Na Vercel o bundle serverless nem sempre inclui staticfiles/; servir da pasta fonte.
+    WHITENOISE_USE_FINDERS = True
+    WHITENOISE_ROOT = BASE_DIR / 'todos' / 'static' / 'todos'
     CSRF_TRUSTED_ORIGINS = [
         origin.strip()
         for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
