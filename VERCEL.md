@@ -45,3 +45,9 @@ O `mydoctor-api/vercel.json` já define install, build, WSGI e rotas — **não*
 - Commit recente (não só manifesto Python na raiz)
 - Home sem erro 404
 - CSS carregando (F12 → Network → `style.css` status 200)
+
+## CSS sem estilo (página em branco / links azuis)
+
+O comando `npx plugins add vercel/vercel-plugin` **não** corrige CSS — é só um plugin opcional do Cursor/Vercel.
+
+O problema era a rota `/static/` no `vercel.json` que devolvia 404. A correção usa **WhiteNoise** no Django e envia `/static/` pelo WSGI.
