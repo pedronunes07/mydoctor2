@@ -9,3 +9,6 @@ dependencies = [
     "tzdata",
     "django-cors-headers>=4.3.0",
 ]
+
+[tool.vercel]
+entrypoint = "projeto.wsgi:application"
