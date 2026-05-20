@@ -1,0 +1,151 @@
+body {
+    background: linear-gradient(120deg, #fff 0%, #f4f4f4 100%);
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.form-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+}
+
+form {
+    background: #fff;
+    padding: 2.5rem 2rem;
+    border-radius: 15px;
+    box-shadow: 0 0 30px rgba(76,175,80,0.10);
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+    border: 1.5px solid #ddd;
+}
+
+h3 {
+    color: #4caf50;
+    margin-bottom: 1.5rem;
+    font-size: 2.1rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+    width: 100%;
+    padding: 13px 3px;
+    margin: 10px 0;
+    border: 1.5px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    background: #f8f9fa;
+    transition: border 0.2s;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus {
+    border: 1.5px solid #4caf50;
+    outline: none;
+}
+
+input[type="date"] {
+    width: 100%;
+    padding: 13px 15px;
+    margin: 10px 0;
+    border: 1.5px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    background: #f8f9fa url('data:image/svg+xml;utf8,<svg fill="%23009688" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zm0-13H5V6h14v1z"/></svg>') no-repeat right 1rem center/1.2em auto;
+    color: #333;
+    box-sizing: border-box;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    text-align: left;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    transition: border 0.2s, box-shadow 0.2s;
+}
+
+input[type="date"]:focus {
+    border: 1.5px solid #009688;
+    outline: none;
+    background-color: #e0f7fa;
+    box-shadow: 0 4px 12px rgba(0,150,136,0.08);
+}
+
+input[type="date"]::-webkit-input-placeholder { color: #aaa; text-align: center; }
+input[type="date"]::placeholder { color: #aaa; text-align: center; }
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    cursor: pointer;
+}
+
+input[type="submit"], .form-btn {
+    width: 100%;
+    padding: 13px;
+    background: #4caf50;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+input[type="submit"]:hover, .form-btn:hover {
+    background: #4caf50;
+}
+
+.error-msg {
+    display: block;
+    background: #ff5252;
+    color: #fff;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+    font-size: 1rem;
+}
+
+p {
+    margin-top: 1rem;
+    font-size: 1rem;
+}
+
+p a {
+    color: #4caf50;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+p a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 500px) {
+    form {
+        padding: 1.5rem 0.5rem;
+    }
+}
+
+/* Estilos da navbar (copiados do style.css do index) */
+.navbar {
+    background-color: #4caf50;
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+
+.navbar-brand {
+    color: #f4f4f4 !important;
+    font-weight: bold;
+}
+
+.nav-link {
+    color: #f4f4f4;
+} 

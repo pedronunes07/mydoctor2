@@ -1,0 +1,146 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>My Doctor</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="{% static 'bootstrap.min.css' %}" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="{% static 'style.css' %}" rel="stylesheet">
+  </head>
+
+  <body>
+    <nav class="navbar navbar-expand-md">
+      <a class="navbar-brand" href="{% url 'dashboard' %}">My Doctor</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item active">
+            <a class="nav-link" href="{% url 'dashboard' %}">Inicio <span class="sr-only">(current)</span></a>
+          </li>
+          <li class="nav-item active">
+            <a class="nav-link" href="#">Planos <span class="sr-only">(current)</span></a>
+          </li>
+          <li class="nav-item active">
+            <a class="nav-link" href="#">Segurança <span class="sr-only">(current)</span></a>
+          </li>
+          <li class="nav-item active">
+            <a class="nav-link" href="{% url 'login' %}" >Login <span class="sr-only">(current)</span></a>
+          </li>
+        </ul>
+        <form class="form-inline my-2 my-lg-0">
+          <input class="form-control mr-sm-2" type="text" placeholder="Barra de Pesquisa" aria-label="Barra_de_Pesquisa">
+          <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Pesquisar</button>
+        </form>
+      </div>
+    </nav>
+
+    <main role="main">
+      <div class="jumbotron">
+        <div class="container">
+          <h1 class="display-3">Bem vindo(a) ao My Doctor</h1>
+          <p>No contexto atual, o acesso à saúde é uma necessidade crucial em meio a diversos
+            obstáculos. Surgindo como uma solução inovadora, o My Doctor é um aplicativo que
+            conecta usuários a profissionais de saúde com base em sua localização. 
+             A proposta do My Doctor, enfatizando sua importância na busca por
+            alternativas acessíveis e práticas na área da saúde. Analisando seu potencial
+            impacto na melhoria do acesso aos cuidados médicos, destacando a
+            importância de inovações como o My Doctor na promoção da equidade e eficácia
+            nos sistemas de saúde.</p>
+          <p><a class="btn btn-primary btn-lg" href="#" role="button">Descubra mais &raquo;</a></p>
+        </div>
+      </div>
+
+      <section id="perfil" class="perfil">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 feature">
+                    <img src="{% static 'hero-1.svg' %}" alt="Atendimento online">
+                    <h3>Consultas por vídeo</h3>
+                    <p>Agende e fale com médicos em minutos, sem filas.</p>
+                </div>
+                <div class="col-md-4 feature">
+                    <img src="{% static 'hero-2.svg' %}" alt="Cuidado humano">
+                    <h3>Cuidado humanizado</h3>
+                    <p>Profissionais qualificados, atendimento acolhedor e seguro.</p>
+                </div>
+                <div class="col-md-4 feature">
+                    <img src="{% static 'hero-3.svg' %}" alt="Tecnologia e praticidade">
+                    <h3>Tecnologia e praticidade</h3>
+                    <p>Prontuário digital, lembretes e chat integrado.</p>
+                </div>
+            </div>
+        </div>
+      </section>
+
+      <section id="download" class="download">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <h2>Experimente o My Doctor hoje mesmo!</h2>
+                    <div class="download-buttons">
+                        <a href="#" class="cta-button cta-button-android">Download para Android</a>
+                        <a href="#" class="cta-button cta-button-ios">Download para iOS</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+      <div class="container">
+        <div class="row">
+          <div class="col-md-4">
+            <h2>Precificação</h2>
+            <p>MyDoctor: Sua saúde na palma da mão, com um preço que cabe no bolso! 
+                Cansado de enfrentar filas, burocracias e longas esperas para cuidar da sua saúde? O MyDoctor chegou para revolucionar a forma como você se relaciona com os serviços médicos! </p>
+            <p><a class="btn btn-secondary" href="#" role="button">Descubra mais &raquo;</a></p>
+          </div>
+          <div class="col-md-4">
+            <h2>Funcionalidades</h2>
+            <p>Agendamento de consultas, integração com planos de saúde, perfil do usuário, Conteúdo educativo personalizado, chat com médicos, prontuário eletrônico, Inteligência artificial para diagnóstico, realidade aumentada para visualização de exames, integração com dispositivos vestíveis e mais! </p>
+            <p><a class="btn btn-secondary" href="#" role="button">Descubra mais &raquo;</a></p>
+          </div>
+          <div class="col-md-4">
+            <h2>Segurança</h2>
+            <p>Implementação de protocolos robustos de segurança: Garantindo a proteção de dados dos usuários e a confiabilidade do aplicativo, Testes rigorosos: Garantindo que o aplicativo funcione sem falhas e ofereça uma experiência impecável aos usuários.</p>
+            <p><a class="btn btn-secondary" href="#" role="button">Descubra mais &raquo;</a></p>
+          </div>
+        </div>
+
+        <hr>
+
+      </div>
+
+    </main>
+
+    <footer class="container">
+      <p>&copy; My Doctor - 2024</p>
+    </footer>
+
+    <!-- Bootstrap core JavaScript
+     
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script>window.jQuery || document.write('<script src="../../../../assets/js/vendor/jquery-slim.min.js"><\/script>')</script>
+    <script src="../../../../assets/js/vendor/popper.min.js"></script>
+    <script src="../../../../dist/js/bootstrap.min.js"></script>
+
+    <!-- ================================================== -->
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.12.0/js/mdb.min.js"></script>
+  </body>
+</html>

@@ -1,0 +1,47 @@
+from django.urls import path
+from .views import (
+    HomeView,
+    login_view,
+    register_view,
+    dashboard_view,
+    doctor_dashboard_view,
+    doctor_accept_consulta_view,
+    agendar_consulta_view,
+    ver_consultas_view,
+    create_chat_room_view,
+    chat_room_view,
+    chat_messages_api,
+    chat_signals_api,
+    upload_recording_api,
+    recorded_list_view,
+    delete_recording_view,
+    create_receita_view,
+    minhas_receitas_view,
+    doctor_recordings_view,
+    close_chat_room_api,
+    ver_consultas_view,
+)
+
+urlpatterns = [
+    path('', HomeView.as_view(), name='home'),
+    path('login/', login_view, name='login'),
+    path('register/', register_view, name='register'),
+    path('dashboard/', dashboard_view, name='dashboard'),
+    path('medico/dashboard/', doctor_dashboard_view, name='doctor_dashboard'),
+    path('medico/consultas/<int:consulta_id>/assumir/', doctor_accept_consulta_view, name='doctor_accept_consulta'),
+    path('agendar-consulta/', agendar_consulta_view, name='agendar_consulta'),
+    path('ver-consultas/', ver_consultas_view, name='ver_consultas'),
+    # Chat
+    path('chat/', create_chat_room_view, name='chat_create'),
+    path('chat/<str:code>/', chat_room_view, name='chat_room'),
+    path('api/chat/<str:code>/messages/', chat_messages_api, name='chat_messages_api'),
+    path('api/chat/<str:code>/signals/', chat_signals_api, name='chat_signals_api'),
+    path('api/chat/<str:code>/upload-recording/', upload_recording_api, name='upload_recording_api'),
+    path('api/chat/<str:code>/close/', close_chat_room_api, name='close_chat_room_api'),
+    path('consultas-gravadas/', recorded_list_view, name='recorded_list'),
+    path('consultas-gravadas/<int:rec_id>/excluir/', delete_recording_view, name='delete_recording'),
+    path('medico/gravacoes/', doctor_recordings_view, name='doctor_recordings'),
+    # Receitas
+    path('medico/consulta/<int:consulta_id>/emitir/', create_receita_view, name='create_receita'),
+    path('minhas-receitas/', minhas_receitas_view, name='minhas_receitas'),
+] 

@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" role="img" aria-labelledby="title desc">
+  <title id="title">My Doctor - Ilustração de capa</title>
+  <desc id="desc">Ilustração simples representando conexão entre paciente e médico via aplicativo.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#0ea5e9"/>
+      <stop offset="100%" stop-color="#22c55e"/>
+    </linearGradient>
+    <style>
+      .title { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif; font-weight: 700; fill: #ffffff; }
+      .subtitle { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif; fill: #eafaf2; }
+      .node { fill: #ffffff; }
+      .ring { fill: none; stroke: #ffffff; opacity: .35; }
+      .link { stroke: #ffffff; stroke-width: 2; opacity: .65; }
+    </style>
+  </defs>
+
+  <rect width="100%" height="100%" fill="url(#bg)" rx="24"/>
+
+  <!-- Anéis decorativos -->
+  <circle class="ring" cx="400" cy="200" r="160" stroke-width="2"/>
+  <circle class="ring" cx="400" cy="200" r="120" stroke-width="2"/>
+  <circle class="ring" cx="400" cy="200" r="80" stroke-width="2"/>
+
+  <!-- Nós (usuário e médico) -->
+  <g>
+    <circle class="node" cx="240" cy="200" r="28"/>
+    <circle class="node" cx="560" cy="200" r="28"/>
+    <path class="link" d="M268 200 C 330 160, 470 160, 532 200" fill="none"/>
+    <path class="link" d="M268 200 C 330 240, 470 240, 532 200" fill="none"/>
+  </g>
+
+  <!-- Telefone estilizado -->
+  <g transform="translate(360,120)">
+    <rect x="0" y="0" width="80" height="160" rx="16" fill="#0b132b"/>
+    <rect x="8" y="16" width="64" height="112" rx="8" fill="#1f2937"/>
+    <circle cx="40" cy="140" r="6" fill="#93c5fd"/>
+    <rect x="28" y="12" width="24" height="2" rx="1" fill="#93c5fd"/>
+    <g transform="translate(20,36)">
+      <rect x="0" y="0" width="40" height="8" rx="4" fill="#22c55e"/>
+      <rect x="0" y="16" width="40" height="8" rx="4" fill="#38bdf8"/>
+      <rect x="0" y="32" width="28" height="8" rx="4" fill="#a7f3d0"/>
+      <rect x="0" y="48" width="34" height="8" rx="4" fill="#fde68a"/>
+    </g>
+  </g>
+
+  <!-- Título -->
+  <g transform="translate(64,72)">
+    <text class="title" font-size="40">My Doctor</text>
+    <text class="subtitle" y="36" font-size="16">Saúde conectada, onde você estiver.</text>
+  </g>
+</svg>
+
+

@@ -1,0 +1,100 @@
+body {
+    background: linear-gradient(120deg, #e8f5e9 0%, #c8e6c9 100%);
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+.agendar-container {
+    max-width: 420px;
+    margin: 48px auto;
+    background: #f4fff6;
+    border-radius: 18px;
+    box-shadow: 0 8px 32px rgba(76,175,80,0.10);
+    padding: 2.5rem 2rem;
+    text-align: center;
+}
+
+.agendar-container h2 {
+    color: #388e3c;
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.agendar-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+}
+
+.agendar-form label {
+    text-align: left;
+    color: #388e3c;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+    font-size: 1rem;
+}
+
+.agendar-form input,
+.agendar-form select,
+.agendar-form textarea {
+    width: 100%;
+    padding: 13px 15px;
+    border: 1.5px solid #b2dfdb;
+    border-radius: 6px;
+    font-size: 1rem;
+    background: #f8f9fa;
+    transition: border 0.2s;
+    color: #333;
+    box-sizing: border-box;
+}
+
+.agendar-form input:focus,
+.agendar-form select:focus,
+.agendar-form textarea:focus {
+    border: 1.5px solid #43a047;
+    outline: none;
+    background: #e8f5e9;
+}
+
+.agendar-btn {
+    background: #43a047;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 14px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: background 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(56,142,60,0.08);
+}
+
+.agendar-btn:hover {
+    background: #388e3c;
+    box-shadow: 0 4px 16px rgba(56,142,60,0.13);
+}
+
+@media (max-width: 500px) {
+    .agendar-container {
+        padding: 1.2rem 0.5rem;
+    }
+}
+
+/* Estilos da navbar (copiados do style.css do index) */
+.navbar {
+    background-color: #4caf50;
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+
+.navbar-brand {
+    color: #f4f4f4 !important;
+    font-weight: bold;
+}
+
+.nav-link {
+    color: #f4f4f4;
+}

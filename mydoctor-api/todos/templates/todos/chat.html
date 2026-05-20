@@ -1,0 +1,457 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat com Médico</title>
+    <link rel="stylesheet" href="{% static 'bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <style>
+        body { background:#f7f9fc; }
+        .container-chat { max-width: 1100px; margin: 20px auto; }
+        .card { box-shadow: 0 6px 18px rgba(0,0,0,0.06); border: none; }
+        .video-wrapper { display:flex; gap: 10px; flex-wrap: wrap; }
+        video { width: 100%; max-height: 300px; background:#000; border-radius: 8px; }
+        #localVideo { transform: scaleX(-1); }
+        .video-col { flex:1 1 320px; }
+        #messages { height: 360px; overflow-y: auto; background:#fff; border-radius:8px; padding:10px; border:1px solid #e6ecf1; }
+        .msg { margin-bottom: 10px; }
+        .msg .sender { font-weight: 600; margin-right: 6px; }
+        .topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+        .room-code { font-family: monospace; background:#eef3f8; padding:6px 10px; border-radius:6px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md">
+      <a class="navbar-brand" href="{% url 'dashboard' %}">My Doctor</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item active">
+            <a class="nav-link" href="{% url 'dashboard' %}">Inicio <span class="sr-only">(current)</span></a>
+          </li>
+          <li class="nav-item active">
+            <a class="nav-link" href="#">Planos <span class="sr-only">(current)</span></a>
+          </li>
+          <li class="nav-item active">
+            <a class="nav-link" href="#">Segurança <span class="sr-only">(current)</span></a>
+          </li>
+          <li class="nav-item active">
+            <a class="nav-link" href="{% url 'dashboard' %}">Serviços</a>
+          </li>
+          <li class="nav-item active">
+            <a class="nav-link" href="{% url 'login' %}" >Login <span class="sr-only">(current)</span></a>
+          </li>
+        </ul>
+        <form class="form-inline my-2 my-lg-0">
+          <input class="form-control mr-sm-2" type="text" placeholder="Barra de Pesquisa" aria-label="Barra_de_Pesquisa">
+          <a class="btn btn-outline-success my-2 my-sm-0" href="{{ voltar_url|default:'/' }}">Voltar</a>
+        </form>
+      </div>
+    </nav>
+
+    <div class="container-chat">
+        <div class="topbar">
+            <div></div>
+            <div>
+                {% if room_code %}
+                    <span>Você está na sala:</span>
+                    <span class="room-code" id="roomCodeText">{{ room_code }}</span>
+                    <div class="mt-2 d-flex" style="gap:8px; align-items:center;">
+                        <input id="inviteInput" type="text" class="form-control" style="max-width:480px" readonly value="{{ invite_url }}">
+                        <button id="btnCopyInvite" class="btn btn-outline-primary">Copiar link</button>
+                    </div>
+                {% else %}
+                    {% if user.medico %}
+                        <form method="post" action="" class="d-flex" style="gap:8px; align-items:center; flex-wrap:wrap;">
+                            {% csrf_token %}
+                            <div>
+                                <label for="consulta_id" class="form-label mb-0">Selecionar consulta agendada</label>
+                                <select id="consulta_id" name="consulta_id" class="form-control" required>
+                                    <option value="" disabled selected>Escolha uma consulta</option>
+                                    {% for c in consultas_do_medico %}
+                                        <option value="{{ c.id }}">{{ c.usuario.get_full_name|default:c.usuario.username }} — {{ c.especialidade }} ({{ c.data }} {{ c.hora }})</option>
+                                    {% empty %}
+                                        <option value="" disabled>Sem consultas vinculadas</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <button class="btn btn-primary">Criar sala</button>
+                        </form>
+                    {% else %}
+                        <div class="alert alert-info">Salas disponíveis para você entrar:</div>
+                        <ul class="list-group">
+                            {% for r in chat_rooms_do_paciente %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>
+                                        Sala {{ r.code }}
+                                        {% if r.consulta %} — {{ r.consulta.especialidade }} ({{ r.consulta.data }} {{ r.consulta.hora }}){% endif %}
+                                    </span>
+                                    <a class="btn btn-primary" href="{% url 'chat_room' r.code %}">Entrar</a>
+                                </li>
+                            {% empty %}
+                                <li class="list-group-item">Nenhuma sala disponível no momento.</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-7">
+                <div class="card">
+                    <div class="card-header">Voz e Vídeo</div>
+                    <div class="card-body">
+                        <div id="incomingOffer" class="alert alert-info" style="display:none;">
+                            <div class="d-flex justify-content-between align-items-center" style="gap:8px; flex-wrap:wrap;">
+                                <div>
+                                    <strong>Chamada recebida</strong>
+                                    <span id="incomingType">(voz/vídeo)</span>
+                                </div>
+                                <div class="d-flex" style="gap:8px;">
+                                    <button id="btnAcceptVideo" class="btn btn-success btn-sm">Aceitar Vídeo</button>
+                                    <button id="btnAcceptAudio" class="btn btn-outline-success btn-sm">Aceitar Áudio</button>
+                                    <button id="btnDecline" class="btn btn-outline-danger btn-sm">Recusar</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="video-wrapper">
+                            <div class="video-col">
+                                <video id="localVideo" autoplay playsinline muted></video>
+                            </div>
+                            <div class="video-col">
+                                <video id="remoteVideo" autoplay playsinline></video>
+                            </div>
+                        </div>
+                        <div class="mt-3 d-flex gap-2">
+                            <button id="btnStartVideo" class="btn btn-success" {% if not room_code %}disabled{% endif %}>Iniciar Vídeo</button>
+                            <button id="btnStartAudio" class="btn btn-outline-success" {% if not room_code %}disabled{% endif %}>Iniciar Áudio</button>
+                            <button id="btnStart" class="btn btn-link" {% if not room_code %}disabled{% endif %}>Voltar ao Dashboard</button>
+                            <button id="btnHangup" class="btn btn-outline-danger" disabled>Encerrar</button>
+                            <button id="btnMute" class="btn btn-outline-secondary" disabled>Mutar</button>
+                            <button id="btnVideo" class="btn btn-outline-secondary" disabled>Vídeo on/off</button>
+                            <button id="btnRec" class="btn btn-outline-primary" disabled>Gravar</button>
+                            <button id="btnStopRec" class="btn btn-outline-warning" disabled>Parar gravação</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="card">
+                    <div class="card-header">Chat de Texto</div>
+                    <div class="card-body">
+                        <div id="messages"></div>
+                        <div class="input-group mt-2">
+                            <input id="msgInput" type="text" class="form-control" placeholder="Digite sua mensagem..." {% if not room_code %}disabled{% endif %}>
+                            <button id="sendBtn" class="btn btn-primary" {% if not room_code %}disabled{% endif %}>Enviar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const roomCode = '{{ room_code|default:"" }}';
+    const inviteInput = document.getElementById('inviteInput');
+    const btnCopyInvite = document.getElementById('btnCopyInvite');
+    const messagesDiv = document.getElementById('messages');
+    const msgInput = document.getElementById('msgInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    let lastMsgId = null;
+    let lastSignalId = null;
+
+    function appendMessage(sender, text) {
+        const el = document.createElement('div');
+        el.className = 'msg';
+        el.innerHTML = `<span class="sender">${sender}:</span><span>${text}</span>`;
+        messagesDiv.appendChild(el);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    async function fetchMessages() {
+        if (!roomCode) return;
+        const url = new URL(window.location.origin + `/api/chat/${roomCode}/messages/`);
+        if (lastMsgId) url.searchParams.set('last_id', lastMsgId);
+        const r = await fetch(url);
+        if (!r.ok) return;
+        const data = await r.json();
+        for (const m of data.messages) {
+            appendMessage(m.sender, m.text);
+            lastMsgId = m.id;
+        }
+    }
+
+    async function sendMessage() {
+        const text = msgInput.value.trim();
+        if (!text) return;
+        msgInput.value = '';
+        const r = await fetch(`/api/chat/${roomCode}/messages/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            body: JSON.stringify({ text })
+        });
+        if (!r.ok) {
+            alert('Falha ao enviar');
+        }
+    }
+
+    if (sendBtn) {
+        sendBtn.addEventListener('click', sendMessage);
+        msgInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
+        setInterval(fetchMessages, 1500);
+    }
+
+    if (btnCopyInvite && inviteInput) {
+        btnCopyInvite.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(inviteInput.value);
+                btnCopyInvite.textContent = 'Copiado!';
+                setTimeout(()=> btnCopyInvite.textContent = 'Copiar link', 1500);
+            } catch (e) {
+                inviteInput.select();
+                document.execCommand('copy');
+            }
+        });
+    }
+
+    // ====== WebRTC simples com polling de sinalização ======
+    const btnStart = document.getElementById('btnStart');
+    const btnStartVideo = document.getElementById('btnStartVideo');
+    const btnStartAudio = document.getElementById('btnStartAudio');
+    const incomingOffer = document.getElementById('incomingOffer');
+    const incomingType = document.getElementById('incomingType');
+    const btnAcceptVideo = document.getElementById('btnAcceptVideo');
+    const btnAcceptAudio = document.getElementById('btnAcceptAudio');
+    const btnDecline = document.getElementById('btnDecline');
+    const btnHangup = document.getElementById('btnHangup');
+    const btnMute = document.getElementById('btnMute');
+    const btnVideo = document.getElementById('btnVideo');
+    const localVideo = document.getElementById('localVideo');
+    const remoteVideo = document.getElementById('remoteVideo');
+
+    let pc = null;
+    let localStream = null;
+    let isMuted = false;
+    let isVideoOff = false;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    async function startCall(mode = 'video') {
+        btnStartVideo.disabled = true;
+        btnStartAudio.disabled = true;
+        btnHangup.disabled = false;
+        btnMute.disabled = false;
+        btnVideo.disabled = (mode === 'audio');
+
+        const constraints = mode === 'audio' ? { audio: true, video: false } : { audio: true, video: true };
+        localStream = await navigator.mediaDevices.getUserMedia(constraints);
+        localVideo.srcObject = localStream;
+
+        pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+        pc.ontrack = (e) => { remoteVideo.srcObject = e.streams[0]; };
+        pc.onicecandidate = async (e) => {
+            if (e.candidate) {
+                await postSignal('candidate', e.candidate.toJSON());
+            }
+        };
+        localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+        // Tenta atuar como caller: cria offer
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        await postSignal('offer', offer);
+    }
+
+    let pendingRemoteOffer = null;
+    async function handleSignals() {
+        if (!roomCode || !pc) return;
+        const url = new URL(window.location.origin + `/api/chat/${roomCode}/signals/`);
+        if (lastSignalId) url.searchParams.set('last_id', lastSignalId);
+        const r = await fetch(url);
+        if (!r.ok) return;
+        const data = await r.json();
+        for (const s of data.signals) {
+            lastSignalId = s.id;
+            if (s.type === 'offer') {
+                // Se recebemos uma offer, viramos callee
+                pendingRemoteOffer = s.content;
+                const sdp = (s.content && s.content.sdp) || '';
+                const wantsVideo = /\bm=video\b/.test(sdp);
+                incomingType.textContent = wantsVideo ? '(vídeo)' : '(áudio)';
+                if (incomingOffer) incomingOffer.style.display = '';
+            } else if (s.type === 'answer') {
+                await pc.setRemoteDescription(new RTCSessionDescription(s.content));
+            } else if (s.type === 'candidate') {
+                try { await pc.addIceCandidate(new RTCIceCandidate(s.content)); } catch {}
+            } else if (s.type === 'decline') {
+                alert('Chamada recusada pelo outro participante.');
+                hangup();
+            } else if (s.type === 'end') {
+                alert('A chamada foi encerrada.');
+                hangup();
+            }
+        }
+    }
+
+    async function ensurePc(mode = 'video') {
+        if (pc) return;
+        const constraints = mode === 'audio' ? { audio: true, video: false } : { audio: true, video: true };
+        localStream = await navigator.mediaDevices.getUserMedia(constraints);
+        localVideo.srcObject = localStream;
+        pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+        pc.ontrack = (e) => { remoteVideo.srcObject = e.streams[0]; };
+        pc.onicecandidate = async (e) => {
+            if (e.candidate) {
+                await postSignal('candidate', e.candidate.toJSON());
+            }
+        };
+        localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+    }
+
+    async function postSignal(type, content) {
+        return fetch(`/api/chat/${roomCode}/signals/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            body: JSON.stringify({ type, content })
+        });
+    }
+
+    async function hangup() {
+        btnStart.disabled = false;
+        btnHangup.disabled = true;
+        btnMute.disabled = true;
+        btnVideo.disabled = true;
+        btnRec.disabled = true;
+        btnStopRec.disabled = true;
+        // tenta encerrar a sala no backend (se usuário for criador)
+        if (roomCode) {
+            try {
+                await fetch(`/api/chat/${roomCode}/close/`, { method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') } });
+                await postSignal('end', { reason: 'hangup' });
+            } catch {}
+        }
+        if (pc) {
+            pc.getSenders().forEach(s => { try { s.track.stop(); } catch {} });
+            pc.close();
+            pc = null;
+        }
+        if (localStream) {
+            localStream.getTracks().forEach(t => t.stop());
+            localStream = null;
+        }
+        remoteVideo.srcObject = null;
+        localVideo.srcObject = null;
+        // voltar para lista de salas
+        window.location.href = "{% url 'chat_create' %}";
+    }
+
+    function toggleMute() {
+        if (!localStream) return;
+        isMuted = !isMuted;
+        localStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
+        btnMute.textContent = isMuted ? 'Desmutar' : 'Mutar';
+    }
+
+    function toggleVideo() {
+        if (!localStream) return;
+        isVideoOff = !isVideoOff;
+        localStream.getVideoTracks().forEach(t => t.enabled = !isVideoOff);
+        btnVideo.textContent = isVideoOff ? 'Vídeo ligar' : 'Vídeo on/off';
+    }
+
+    const DASHBOARD_URL = "{% url 'dashboard' %}";
+
+    if (btnStart) {
+        btnStart.addEventListener('click', () => { window.location.href = DASHBOARD_URL; });
+        btnStartVideo.addEventListener('click', () => startCall('video'));
+        btnStartAudio.addEventListener('click', () => startCall('audio'));
+        btnHangup.addEventListener('click', hangup);
+        btnMute.addEventListener('click', toggleMute);
+        btnVideo.addEventListener('click', toggleVideo);
+        setInterval(handleSignals, 1200);
+    }
+
+    async function acceptIncoming(mode) {
+        if (!pendingRemoteOffer) return;
+        if (!pc) await ensurePc(mode);
+        await pc.setRemoteDescription(new RTCSessionDescription(pendingRemoteOffer));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        await postSignal('answer', answer);
+        pendingRemoteOffer = null;
+        if (incomingOffer) incomingOffer.style.display = 'none';
+    }
+
+    if (btnAcceptVideo) btnAcceptVideo.addEventListener('click', () => acceptIncoming('video'));
+    if (btnAcceptAudio) btnAcceptAudio.addEventListener('click', () => acceptIncoming('audio'));
+    if (btnDecline) btnDecline.addEventListener('click', async () => {
+        await postSignal('decline', { reason: 'user_declined' });
+        pendingRemoteOffer = null;
+        if (incomingOffer) incomingOffer.style.display = 'none';
+    });
+
+    // ====== Gravação ======
+    function enableRecordingButtons() {
+        btnRec.disabled = false;
+    }
+    function startRecording() {
+        if (!localStream && !remoteVideo.srcObject) return;
+        const mixStream = new MediaStream();
+        // Preferir remoto; se não houver, usa local
+        const baseStream = remoteVideo.srcObject || localStream;
+        baseStream.getTracks().forEach(t => mixStream.addTrack(t));
+        try {
+            mediaRecorder = new MediaRecorder(mixStream, { mimeType: 'video/webm;codecs=vp8,opus' });
+        } catch (e) {
+            mediaRecorder = new MediaRecorder(mixStream);
+        }
+        recordedChunks = [];
+        mediaRecorder.ondataavailable = e => { if (e.data && e.data.size) recordedChunks.push(e.data); };
+        mediaRecorder.onstop = async () => {
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const form = new FormData();
+            form.append('file', blob, `gravacao_${Date.now()}.webm`);
+            form.append('duration', '0');
+            const r = await fetch(`/api/chat/${roomCode}/upload-recording/`, { method: 'POST', body: form, headers: { 'X-CSRFToken': getCookie('csrftoken') } });
+            if (!r.ok) alert('Falha ao enviar gravação');
+        };
+        mediaRecorder.start(1000);
+        btnRec.disabled = true;
+        btnStopRec.disabled = false;
+    }
+    function stopRecording() {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+        }
+        btnRec.disabled = false;
+        btnStopRec.disabled = true;
+    }
+
+    if (btnRec) {
+        btnRec.addEventListener('click', startRecording);
+        btnStopRec.addEventListener('click', stopRecording);
+    }
+
+    // Iniciar automaticamente a chamada e a gravação quando houver sala
+    (function initIfRoom(){
+        if (!roomCode) return;
+        // Habilitar gravação somente após iniciar a chamada
+        enableRecordingButtons();
+    })();
+    </script>
+</body>
+</html>
+
+

@@ -1,0 +1,31 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minhas Receitas e Atestados</title>
+    <link href="{% static 'bootstrap.min.css' %}" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-4">
+    <h3>Receitas e Atestados</h3>
+    <div class="list-group">
+        {% for r in receitas %}
+        <div class="list-group-item">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">{{ r.get_tipo_display }} - {{ r.consulta.especialidade }}</h5>
+                <small>{{ r.criado_em }}</small>
+            </div>
+            <p class="mb-1">Emitido por: Dr(a). {{ r.medico.user.get_full_name|default:r.medico.user.username }}</p>
+            <pre class="mb-0" style="white-space: pre-wrap;">{{ r.conteudo }}</pre>
+        </div>
+        {% empty %}
+        <p>Nenhum documento encontrado.</p>
+        {% endfor %}
+    </div>
+    <a href="{% url 'dashboard' %}" class="btn btn-secondary mt-3">Voltar</a>
+</div>
+</body>
+</html>
+

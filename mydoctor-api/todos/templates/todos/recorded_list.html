@@ -1,0 +1,74 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consultas Gravadas</title>
+    <link rel="stylesheet" href="{% static 'bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+<nav class="navbar navbar-expand-md">
+  <a class="navbar-brand" href="{% url 'dashboard' %}">My Doctor</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item active">
+        <a class="nav-link" href="{% url 'dashboard' %}">Inicio <span class="sr-only">(current)</span></a>
+      </li>
+      <li class="nav-item active">
+        <a class="nav-link" href="#">Planos <span class="sr-only">(current)</span></a>
+      </li>
+      <li class="nav-item active">
+        <a class="nav-link" href="#">Segurança <span class="sr-only">(current)</span></a>
+      </li>
+      <li class="nav-item active">
+        <a class="nav-link" href="{% url 'dashboard' %}">Serviços</a>
+      </li>
+      <li class="nav-item active">
+        <a class="nav-link" href="{% url 'login' %}" >Login <span class="sr-only">(current)</span></a>
+      </li>
+    </ul>
+    <form class="form-inline my-2 my-lg-0">
+      <a class="btn btn-outline-success my-2 my-sm-0" href="{{ voltar_url|default:'/' }}">Voltar</a>
+    </form>
+  </div>
+</nav>
+
+<div class="dashboard-container">
+    <h2>Consultas Gravadas</h2>
+    <div class="dashboard-grid">
+        {% if recordings %}
+            {% for r in recordings %}
+                <div class="dashboard-card" style="padding:16px; background:#fff; border-radius:10px; box-shadow:0 6px 18px rgba(0,0,0,0.06);">
+                    <div><strong>Sala:</strong> {{ r.room.code }}</div>
+                    <div><strong>Enviado por:</strong> {{ r.uploaded_by.username }}</div>
+                    <div><strong>Duração:</strong> {{ r.duration_seconds }}s</div>
+                    <div><strong>Data:</strong> {{ r.created_at|date:'d/m/Y H:i' }}</div>
+                    <div class="mt-2">
+                        <video controls style="width:100%; max-height:300px; border-radius:8px;">
+                            <source src="{{ r.file.url }}">
+                        </video>
+                    </div>
+                    <div class="mt-2 d-flex gap-2">
+                        <a class="btn btn-sm btn-outline-primary" href="{{ r.file.url }}" download>Baixar</a>
+                        <form method="post" action="{% url 'delete_recording' r.id %}" onsubmit="return confirm('Excluir esta gravação?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Excluir</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-info">Nenhuma consulta gravada encontrada.</div>
+        {% endif %}
+    </div>
+</div>
+
+</body>
+</html>
+
+

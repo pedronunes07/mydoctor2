@@ -1,0 +1,56 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link href="{% static 'bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'style.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'style_login.css' %}">
+</head>
+<body>
+<nav class="navbar navbar-expand-md">
+  <a class="navbar-brand" href="{% url 'dashboard' %}">My Doctor</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item active">
+        <a class="nav-link" href="{% url 'dashboard' %}">Inicio <span class="sr-only">(current)</span></a>
+      </li>
+      <li class="nav-item active">
+        <a class="nav-link" href="#">Planos <span class="sr-only">(current)</span></a>
+      </li>
+      <li class="nav-item active">
+        <a class="nav-link" href="#">Segurança <span class="sr-only">(current)</span></a>
+      </li>
+      <li class="nav-item active">
+        <a class="nav-link" href="{% url 'login' %}" >Login <span class="sr-only">(current)</span></a>
+      </li>
+    </ul>
+    <form class="form-inline my-2 my-lg-0">
+      <input class="form-control mr-sm-2" type="text" placeholder="Barra de Pesquisa" aria-label="Barra_de_Pesquisa">
+      <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Pesquisar</button>
+    </form>
+  </div>
+</nav>
+<div class="form-container">
+    <form method="post">
+        {% csrf_token %}
+        <h3>LOGIN</h3>
+        {% if messages %}
+            {% for message in messages %}
+                <span class="error-msg">{{ message }}</span>
+            {% endfor %}
+        {% endif %}
+        <input type="email" name="email" placeholder="Digite seu Email (paciente)">
+        <input type="text" name="crm" placeholder="CRM (médico)">
+        <input type="password" name="password" required placeholder="Digite sua senha">
+        <input type="submit" value="login" class="form-btn">
+        <p>Não tem uma conta? <a href="{% url 'register' %}">Registre Agora</a></p>
+    </form>
+</div>
+</body>
+</html> 

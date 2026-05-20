@@ -1,0 +1,156 @@
+/* Estilos gerais */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+/* Estilos do container */
+.container {
+    text-align: center;
+    padding: 0.5em;
+    margin-bottom: 20px;
+}
+
+/* Estilos do jumbotron */
+.jumbotron {
+    background-color: #f8f9fa;
+    padding: 4rem 2rem;
+    margin-bottom: 2rem;
+    border-radius: .3rem;
+}
+
+.display-3 {
+    color: #4caf50;
+    padding: 0.5em;
+}
+
+/* Estilos dos botões */
+.btn {
+    color: #ffffff;
+    background-color: #4caf50;
+    padding: 0.5em;
+}
+
+/* Estilos da seção de perfil */
+.perfil {
+    background-color: #fff;
+    padding: 2em;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.feature {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.feature img {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 10px;
+}
+
+/* Estilos da seção de download */
+.download {
+    text-align: center;
+    padding: 2em;
+    margin-bottom: 20px;
+    background-color: #007bff;
+    color: white;
+}
+
+.download-buttons {
+    margin-top: 20px;
+}
+
+.cta-button {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #4caf50;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 5px;
+    margin: 0 10px;
+    transition: all 0.3s ease;
+}
+
+.cta-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,.2);
+    color: white;
+    text-decoration: none;
+}
+
+/* Estilos do footer */
+footer {
+    color: #000000;
+    text-align: center;
+    padding: 1em;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .download-buttons {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .cta-button {
+        margin: 0.5rem 0;
+        width: 80%;
+    }
+}
+
+.navbar {
+    background-color: #4bb34b !important;
+    color: #fff;
+    box-shadow: 0 2px 6px #00000010;
+}
+.navbar .navbar-brand, .navbar .nav-link {
+    color: #fff !important;
+    font-weight: bold;
+}
+.navbar .nav-link:hover {
+    text-decoration: underline;
+    color: #e6ffe6 !important;
+}
+.navbar .form-inline {
+    background: transparent;
+    border-radius: 8px;
+    padding: 0;
+    margin-left: 2rem;
+    display: flex;
+    align-items: center;
+}
+.navbar .form-control {
+    border-radius: 4px 0 0 4px !important;
+    border: none !important;
+    background: #43a047 !important;
+    color: #fff !important;
+    box-shadow: none !important;
+    height: 38px;
+}
+.navbar .form-control::placeholder {
+    color: #e6ffe6;
+    opacity: 1;
+}
+.navbar .btn-outline-success {
+    background: #fff !important;
+    color: #4bb34b !important;
+    border: none !important;
+    border-radius: 0 4px 4px 0 !important;
+    font-weight: bold;
+    height: 38px;
+    margin-left: -4px;
+    transition: background 0.2s, color 0.2s;
+}
+.navbar .btn-outline-success:hover {
+    background: #e6ffe6 !important;
+    color: #388e3c !important;
+}
+  

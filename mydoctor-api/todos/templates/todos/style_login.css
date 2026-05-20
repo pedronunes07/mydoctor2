@@ -1,0 +1,191 @@
+body {
+    background: linear-gradient(120deg, #e8f5e9 0%, #c8e6c9 100%);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+}
+
+.form-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+}
+
+form {
+    background: #f4fff6;
+    padding: 2.8rem 2.2rem;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(76,175,80,0.10);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow 0.3s;
+}
+
+form::before {
+    content: '';
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 180px;
+    height: 180px;
+    background: linear-gradient(135deg, #4caf50 60%, #388e3c 100%);
+    opacity: 0.10;
+    border-radius: 50%;
+    z-index: 0;
+}
+
+form:hover {
+    box-shadow: 0 12px 40px rgba(76, 175, 80, 0.18), 0 2px 8px rgba(0,0,0,0.10);
+}
+
+h3 {
+    color: #388e3c;
+    margin-bottom: 1.5rem;
+    font-size: 2.2rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    z-index: 1;
+    position: relative;
+}
+
+input[type="email"],
+input[type="password"] {
+    width: 100%;
+    padding: 14px 16px;
+    margin: 12px 0;
+    border: 1.5px solid #c8e6c9;
+    border-radius: 7px;
+    font-size: 1.08rem;
+    background: #f8f9fa;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+    z-index: 1;
+    position: relative;
+}
+
+input[type="email"]:focus,
+input[type="password"]:focus {
+    border-color: #43a047;
+    box-shadow: 0 0 0 2px #c8e6c9;
+    background: #fff;
+}
+
+input[type="submit"], .form-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(90deg, #4caf50 60%, #43a047 100%);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.15rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 16px;
+    transition: background 0.2s, transform 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.08);
+    z-index: 1;
+    position: relative;
+}
+
+input[type="submit"]:hover, .form-btn:hover {
+    background: linear-gradient(90deg, #43a047 60%, #388e3c 100%);
+    transform: translateY(-2px) scale(1.02);
+}
+
+.error-msg {
+    display: block;
+    background: #ff5252;
+    color: #fff;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+    font-size: 1rem;
+    z-index: 1;
+    position: relative;
+}
+
+p {
+    margin-top: 1.5rem;
+    font-size: 1rem;
+    z-index: 1;
+    position: relative;
+}
+
+p a {
+    color: #43a047;
+    font-weight: bold;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+p a:hover {
+    text-decoration: underline;
+    color: #388e3c;
+}
+
+@media (max-width: 500px) {
+    form {
+        padding: 1.2rem 0.5rem;
+        border-radius: 12px;
+    }
+    h3 {
+        font-size: 1.5rem;
+    }
+}
+
+/* Estilos da navbar */
+.navbar {
+    background-color: #4caf50;
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+    margin-top: 24px;
+}
+.navbar .navbar-brand, .navbar .nav-link {
+    color: #fff !important;
+    font-weight: bold;
+}
+.navbar .nav-link:hover {
+    text-decoration: underline;
+    color: #e6ffe6 !important;
+}
+.navbar .form-inline {
+    background: transparent;
+    border-radius: 8px;
+    padding: 0;
+    margin-left: 2rem;
+    display: flex;
+    align-items: center;
+}
+.navbar .form-control {
+    border-radius: 4px 0 0 4px !important;
+    border: none !important;
+    background: #fff !important;
+    color: #4caf50 !important;
+    box-shadow: none !important;
+    height: 38px;
+}
+.navbar .form-control::placeholder {
+    color: #4caf50;
+    opacity: 1;
+}
+.navbar .btn-outline-success {
+    background: #fff !important;
+    color: #4caf50 !important;
+    border: none !important;
+    border-radius: 0 4px 4px 0 !important;
+    font-weight: bold;
+    height: 38px;
+    margin-left: -4px;
+    transition: background 0.2s, color 0.2s;
+}
+.navbar .btn-outline-success:hover {
+    background: #e6ffe6 !important;
+    color: #388e3c !important;
+} 

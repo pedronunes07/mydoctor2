@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" role="img" aria-labelledby="title desc">
+  <title id="title">Tecnologia e praticidade</title>
+  <desc id="desc">Ilustração geométrica com dispositivos e ritmo tecnológico.</desc>
+  <defs>
+    <linearGradient id="g3" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#0ea5e9"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <style>
+      .h1{font:700 34px system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;fill:#f5f3ff}
+      .p{font:400 16px system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;fill:#ddd6fe}
+    </style>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#g3)" rx="24"/>
+  <g stroke="#ffffff" stroke-opacity=".4">
+    <rect x="120" y="120" width="120" height="160" rx="16" fill="none" stroke-width="2"/>
+    <rect x="560" y="120" width="120" height="160" rx="16" fill="none" stroke-width="2"/>
+    <path d="M240 200 H 560" stroke-width="2"/>
+    <circle cx="320" cy="200" r="8" fill="#fff" stroke="none"/>
+    <circle cx="520" cy="200" r="8" fill="#fff" stroke="none"/>
+  </g>
+  <g transform="translate(56,70)">
+    <text class="h1">Tecnologia e praticidade</text>
+    <text class="p" y="28">Fluxos ágeis para o seu dia a dia.</text>
+  </g>
+</svg>
+
+

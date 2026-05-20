@@ -1,0 +1,83 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard do Médico</title>
+    <link href="{% static 'bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'style.css' %}" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar navbar-expand-md">
+  <a class="navbar-brand" href="{% url 'home' %}">My Doctor</a>
+</nav>
+<div class="container mt-4">
+    <h2 class="mb-3">Painel do Médico</h2>
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-bg-light mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Pendentes</h5>
+                    <span class="badge bg-warning text-dark">{{ pendentes|length }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-bg-light mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Minhas Consultas</h5>
+                    <span class="badge bg-primary">{{ consultas|length }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <a class="btn btn-outline-primary w-100 h-100 d-flex align-items-center justify-content-center" href="{% url 'doctor_recordings' %}">Ver gravações</a>
+        </div>
+    </div>
+
+    <h4>Consultas Pendentes</h4>
+    <div class="list-group mb-4">
+        {% for c in pendentes %}
+        <div class="list-group-item">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">{{ c.especialidade }} - {{ c.usuario.username }}</h5>
+                <small>{{ c.data }} {{ c.hora }}</small>
+            </div>
+            <p class="mb-1">{{ c.observacoes }}</p>
+            <div class="mt-2">
+                <a class="btn btn-success btn-sm" href="{% url 'doctor_accept_consulta' c.id %}">Assumir</a>
+            </div>
+        </div>
+        {% empty %}
+        <p>Nenhuma consulta pendente para sua especialidade.</p>
+        {% endfor %}
+    </div>
+
+    <h4>Minhas Consultas</h4>
+    <div class="list-group">
+        {% for c in consultas %}
+        <div class="list-group-item">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">{{ c.especialidade }} - {{ c.usuario.username }}</h5>
+                <small>{{ c.data }} {{ c.hora }}</small>
+            </div>
+            <p class="mb-1">{{ c.observacoes }}</p>
+            <div class="mt-2">
+                <form method="post" action="{% url 'chat_create' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="consulta_id" value="{{ c.id }}">
+                    <button class="btn btn-primary btn-sm me-2" type="submit">Iniciar ligação</button>
+                </form>
+                <a class="btn btn-outline-secondary btn-sm me-2" href="{% url 'create_receita' c.id %}">Emitir receita/atestado</a>
+                <a class="btn btn-outline-dark btn-sm" href="{% url 'doctor_recordings' %}">Gravações</a>
+            </div>
+        </div>
+        {% empty %}
+        <p>Nenhuma consulta atribuída.</p>
+        {% endfor %}
+    </div>
+</div>
+</body>
+</html>
+
