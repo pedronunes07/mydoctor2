@@ -61,7 +61,12 @@ class NumericInputTests(TestCase):
         self.assertContains(response, f'href="{reverse("dashboard")}"')
         self.assertContains(response, 'Voltar')
 
-    def test_superuser_with_medico_returns_to_services_dashboard(self):
+    def test_logged_users_return_to_services_dashboard(self):
+        doctor = User.objects.create_user(username='doctor-user', password='SenhaForte123')
+        Medico.objects.create(user=doctor, crm='8888', especialidade='clinico')
+
+        self.assertEqual(get_panel_url(doctor), reverse('dashboard'))
+
         user = User.objects.create_superuser(
             username='admin',
             email='admin@example.com',
