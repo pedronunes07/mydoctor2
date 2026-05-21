@@ -778,6 +778,12 @@ input[type="submit"].form-btn {
   display: none !important;
 }
 
+a.btn.disabled,
+a.btn[aria-disabled="true"] {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
 /* —— Footer —— */
 .md-footer {
   text-align: center;

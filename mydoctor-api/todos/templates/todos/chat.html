@@ -1,9 +1,10 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
+{% url 'dashboard' as dashboard_url %}
 {% include 'todos/_head.html' with page_title='Consulta' %}
 <body>
-{% include 'todos/_navbar.html' with voltar_url=panel_url %}
+{% include 'todos/_navbar.html' with voltar_url=dashboard_url %}
 {% include 'todos/_messages.html' %}
 
 <main class="md-main md-chat-wrap">
@@ -97,7 +98,7 @@
                             </div>
                             <div class="md-call-toolbar__row md-call-toolbar__row--end">
                                 <button type="button" id="btnHangup" class="btn btn-outline-danger" disabled>Encerrar</button>
-                                <button type="button" id="btnStart" class="btn btn-md-outline" {% if not room_code %}disabled{% endif %}>Voltar ao painel</button>
+                                <a id="btnStart" class="btn btn-md-outline" href="{{ dashboard_url }}" {% if not room_code %}aria-disabled="true" tabindex="-1"{% endif %}>Voltar ao dashboard</a>
                             </div>
                         </div>
                     </div>
@@ -437,7 +438,10 @@
         if (incomingOffer) incomingOffer.style.display = 'none';
         if (btnStartVideo) btnStartVideo.disabled = !roomCode;
         if (btnStartAudio) btnStartAudio.disabled = !roomCode;
-        if (btnStart) btnStart.disabled = !roomCode;
+        if (btnStart) {
+            btnStart.classList.toggle('disabled', !roomCode);
+            btnStart.style.pointerEvents = roomCode ? '' : 'none';
+        }
         if (btnHangup) btnHangup.disabled = true;
         if (btnMute) btnMute.disabled = true;
         if (btnVideo) btnVideo.disabled = true;
@@ -500,59 +504,48 @@
         btnVideo.textContent = isVideoOff ? 'Vídeo ligar' : 'Vídeo on/off';
     }
 
-    const PANEL_URL = "{{ panel_url }}";
-    const PANEL_FALLBACK = "{% if is_doctor_panel %}{% url 'doctor_dashboard' %}{% else %}{% url 'dashboard' %}{% endif %}";
-    const RECORDINGS_URL = "{{ recordings_url }}";
+    const DASHBOARD_URL = "{{ dashboard_url }}";
     let leavingPage = false;
 
-    function panelDestination() {
-        const url = (PANEL_URL || '').trim();
-        return (url && url.charAt(0) === '/') ? url : PANEL_FALLBACK;
+    function setLeaveButtonsDisabled(disabled) {
+        if (btnHangup) btnHangup.disabled = disabled;
+        if (btnBackNav) {
+            btnBackNav.classList.toggle('disabled', disabled);
+            btnBackNav.style.pointerEvents = disabled ? 'none' : '';
+        }
+        if (btnStart) {
+            btnStart.classList.toggle('disabled', disabled);
+            btnStart.style.pointerEvents = disabled ? 'none' : '';
+        }
     }
 
-    function setPanelButtonsDisabled(disabled) {
-        [btnStart, btnBackNav, btnHangup].forEach((el) => { if (el) el.disabled = disabled; });
-    }
-
-    async function goToPanel() {
-        if (leavingPage) return;
+    async function goToDashboard(e) {
+        if (e) e.preventDefault();
+        if (leavingPage || !DASHBOARD_URL) return;
         leavingPage = true;
-        setPanelButtonsDisabled(true);
-        showCallStatus('Salvando gravação e voltando ao painel...');
+        setLeaveButtonsDisabled(true);
+        showCallStatus('Salvando gravação...');
 
         try {
             await flushRecording({ silent: false });
-            if (inCall || pc || localStream) {
-                await endCallLocal({
-                    notifyRemote: true,
-                    skipRecording: true,
-                    message: 'Ligação encerrada. Voltando ao painel...',
-                });
-            } else {
-                cleanupCall();
-            }
-            window.location.href = panelDestination();
-        } catch (e) {
-            console.error(e);
-            leavingPage = false;
-            setPanelButtonsDisabled(false);
-            showCallStatus('Não foi possível sair agora. Tente Parar gravação e clique de novo.');
+        } catch (err) {
+            console.warn('Gravação:', err);
         }
+
+        cleanupCall();
+        window.location.replace(DASHBOARD_URL);
     }
 
     const btnBackNav = document.querySelector('.md-btn-back');
     if (btnBackNav) {
-        btnBackNav.addEventListener('click', (e) => {
-            e.preventDefault();
-            goToPanel();
-        });
+        btnBackNav.addEventListener('click', goToDashboard);
     }
 
     if (roomCode) {
         setInterval(handleSignals, 1200);
     }
-    if (btnStart) {
-        btnStart.addEventListener('click', goToPanel);
+    if (btnStart && roomCode) {
+        btnStart.addEventListener('click', goToDashboard);
         btnStartVideo.addEventListener('click', () => startCall('video').catch(e => alert('Permita câmera/microfone: ' + e)));
         btnStartAudio.addEventListener('click', () => startCall('audio').catch(e => alert('Permita microfone: ' + e)));
         btnHangup.addEventListener('click', async () => {

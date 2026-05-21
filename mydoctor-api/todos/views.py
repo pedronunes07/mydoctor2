@@ -229,12 +229,8 @@ def create_chat_room_view(request):
             consulta__usuario=request.user,
             closed_at__isnull=True,
         ).select_related('consulta').order_by('-created_at')
-    panel = get_panel_url(request.user)
     context = {
-        'voltar_url': panel,
-        'panel_url': panel,
         'recordings_url': get_recordings_url(request.user),
-        'is_doctor_panel': user_has_medico(request.user),
         'consultas_do_medico': consultas,
         'consultas_paciente': consultas_paciente,
         'chat_rooms_do_paciente': salas_paciente,
@@ -315,13 +311,9 @@ def chat_room_view(request, code):
     if not user_can_access_room(request.user, room):
         messages.error(request, 'Você não tem acesso a esta sala.')
         return redirect('dashboard')
-    panel = get_panel_url(request.user)
     context = {
         'room_code': room.code,
-        'voltar_url': panel,
-        'panel_url': panel,
         'recordings_url': get_recordings_url(request.user),
-        'is_doctor_panel': user_has_medico(request.user),
         'invite_url': request.build_absolute_uri(),
     }
     return render(request, 'todos/chat.html', context)
