@@ -3,6 +3,7 @@ from django.views.generic import TemplateView
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
+from .forms import ConsultaForm, LoginForm, ReceitaForm, RegisterForm, only_digits
 from .models import Todo, Consulta, ChatRoom, ChatMessage, ChatSignal, Recording, Medico, Receita
 from .middleware import AUTH_SNAPSHOT_KEY, build_auth_snapshot
 from .utils import (
@@ -27,7 +28,6 @@ from django.views.decorators.http import require_http_methods
 from django.utils.crypto import get_random_string
 import json
 from django.views.decorators.csrf import csrf_exempt
-import re
 
 # Create your views here.
 from django.shortcuts import render
@@ -69,10 +69,6 @@ def health_view(request):
     return JsonResponse({'status': 'ok'})
 
 
-def only_digits(value):
-    return re.sub(r'\D', '', value or '')
-
-
 def get_medico_by_numeric_crm(crm):
     try:
         return Medico.objects.select_related('user').get(crm=crm)
@@ -101,26 +97,27 @@ def login_view(request):
     if request.user.is_authenticated:
         return redirect(get_panel_url(request.user))
     if request.method == 'POST':
-        email = request.POST.get('email')
-        crm = only_digits(request.POST.get('crm'))
-        password = request.POST.get('password')
+        form = LoginForm(request.POST)
         user = None
-        if crm:
-            med = get_medico_by_numeric_crm(crm)
-            if med:
-                user = authenticate(request, username=med.user.username, password=password)
-        elif email:
-            try:
-                u = User.objects.get(email=email)
-                user = authenticate(request, username=u.username, password=password)
-            except User.DoesNotExist:
-                user = None
+        if form.is_valid():
+            email = form.cleaned_data.get('email')
+            crm = form.cleaned_data.get('crm')
+            password = form.cleaned_data['password']
+            if crm:
+                med = get_medico_by_numeric_crm(crm)
+                if med:
+                    user = authenticate(request, username=med.user.username, password=password)
+            elif email:
+                try:
+                    u = User.objects.get(email=email)
+                    user = authenticate(request, username=u.username, password=password)
+                except User.DoesNotExist:
+                    user = None
         if user is not None:
             login(request, user)
             request.session[AUTH_SNAPSHOT_KEY] = build_auth_snapshot(user)
             return redirect('dashboard')
-        else:
-            messages.error(request, 'Email/CRM ou senha incorretos!')
+        messages.error(request, 'Email/CRM ou senha incorretos!')
     else:
         # Limpa mensagens pendentes (ex.: avisos de outras páginas)
         list(messages.get_messages(request))
@@ -131,39 +128,23 @@ def register_view(request):
     if request.user.is_authenticated:
         return redirect(get_panel_url(request.user))
     if request.method == 'POST':
-        username = request.POST['username']
-        email = request.POST['email']
-        password = request.POST['password']
-        password2 = request.POST['password2']
-        full_name = request.POST.get('full_name', '')
-        phone = only_digits(request.POST.get('phone', ''))
-        birthdate = request.POST.get('birthdate', '')
-        is_medico = request.POST.get('is_medico') == 'on'
-        crm = only_digits(request.POST.get('crm', ''))
-        especialidade = request.POST.get('especialidade', '').strip()
-        if password != password2:
-            messages.error(request, 'As senhas não coincidem!')
-        elif User.objects.filter(username=username).exists():
-            messages.error(request, 'Nome de usuário já existe!')
-        elif User.objects.filter(email=email).exists():
-            messages.error(request, 'E-mail já cadastrado!')
-        elif not phone:
-            messages.error(request, 'Telefone deve conter apenas números!')
-        elif is_medico and not crm:
-            messages.error(request, 'CRM é obrigatório para cadastro de médico!')
-        elif is_medico and get_medico_by_numeric_crm(crm):
-            messages.error(request, 'CRM já cadastrado!')
-        elif is_medico and not especialidade:
-            messages.error(request, 'Selecione a especialidade do médico!')
-        else:
-            user = User.objects.create_user(username=username, email=email, password=password)
-            user.first_name = full_name
-            user.last_name = f"{phone} / {birthdate}"
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            user = User.objects.create_user(
+                username=data['username'],
+                email=data['email'],
+                password=data['password'],
+            )
+            user.first_name = data['full_name']
+            user.last_name = f"{data['phone']} / {data['birthdate']}"
             user.save()
-            if is_medico:
-                Medico.objects.create(user=user, crm=crm, especialidade=especialidade)
+            if data['is_medico']:
+                Medico.objects.create(user=user, crm=data['crm'], especialidade=data['especialidade'])
             messages.success(request, 'Cadastro realizado com sucesso! Faça login.')
             return redirect('login')
+        for errors in form.errors.values():
+            messages.error(request, errors[0])
     context = {'voltar_url': reverse('home')}
     return render(request, 'todos/register.html', context)
 
@@ -181,27 +162,21 @@ def ver_consultas_view(request):
 @login_required
 def agendar_consulta_view(request):
     if request.method == 'POST':
-        especialidade = (request.POST['especialidade'] or '').strip()
-        data = request.POST['data']
-        hora = request.POST['hora']
-        observacoes = request.POST.get('obs', '')
-        consulta = Consulta.objects.create(
-            usuario=request.user,
-            especialidade=especialidade,
-            data=data,
-            hora=hora,
-            observacoes=observacoes
-        )
-        # Tenta atribuir automaticamente a um médico da mesma especialidade
-        try:
-            medico_match = Medico.objects.filter(especialidade__iexact=especialidade.strip()).first()
+        data = request.POST.copy()
+        data['observacoes'] = data.get('obs', '')
+        form = ConsultaForm(data)
+        if form.is_valid():
+            consulta = form.save(commit=False)
+            consulta.usuario = request.user
+            consulta.save()
+            medico_match = Medico.objects.filter(especialidade__iexact=consulta.especialidade.strip()).first()
             if medico_match:
                 consulta.medico = medico_match
                 consulta.save(update_fields=['medico'])
-        except Exception:
-            pass
-        messages.success(request, 'Consulta agendada! Aguarde o médico assumir ou entre na ligação em Ver Consultas.')
-        return redirect('ver_consultas')
+            messages.success(request, 'Consulta agendada! Aguarde o médico assumir ou entre na ligação em Ver Consultas.')
+            return redirect('ver_consultas')
+        for errors in form.errors.values():
+            messages.error(request, errors[0])
     context = {'voltar_url': get_panel_url(request.user)}
     return render(request, 'todos/agendar_consulta.html', context)
 
@@ -297,22 +272,17 @@ def create_receita_view(request, consulta_id):
         messages.error(request, 'Apenas o médico responsável pode emitir receita/atestado desta consulta.')
         return redirect('doctor_dashboard')
     if request.method == 'POST':
-        tipo = request.POST.get('tipo', 'receita')
-        destinatario = request.POST.get('destinatario', '').strip()
-        conteudo = request.POST.get('conteudo', '').strip()
-        if not conteudo:
-            messages.error(request, 'Conteúdo é obrigatório.')
-        else:
-            Receita.objects.create(
-                consulta=consulta,
-                paciente=consulta.usuario,
-                medico=request.user.medico,
-                tipo=tipo,
-                destinatario=destinatario,
-                conteudo=conteudo
-            )
+        form = ReceitaForm(request.POST)
+        if form.is_valid():
+            receita = form.save(commit=False)
+            receita.consulta = consulta
+            receita.paciente = consulta.usuario
+            receita.medico = request.user.medico
+            receita.save()
             messages.success(request, 'Documento emitido com sucesso.')
             return redirect('doctor_dashboard')
+        for errors in form.errors.values():
+            messages.error(request, errors[0])
     context = {'consulta': consulta, 'voltar_url': get_panel_url(request.user)}
     return render(request, 'todos/receita_form.html', context)
 
