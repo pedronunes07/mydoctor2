@@ -1,7 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
-{% url 'dashboard' as dashboard_url %}
 {% include 'todos/_head.html' with page_title='Consulta' %}
 <body>
 {% include 'todos/_navbar.html' with voltar_url=dashboard_url %}
@@ -519,12 +518,18 @@
         }
     }
 
-    async function goToDashboard(e) {
+    function shouldSaveRecordingBeforeLeave() {
+        return isRecordingActive() || uploadInProgress || recordedChunks.length > 0;
+    }
+
+    async function leaveRoom(e, targetUrl) {
         if (e) e.preventDefault();
-        if (leavingPage || !DASHBOARD_URL) return;
+        if (leavingPage || !targetUrl) return;
         leavingPage = true;
         setLeaveButtonsDisabled(true);
-        showCallStatus('Salvando gravação...');
+        if (shouldSaveRecordingBeforeLeave()) {
+            showCallStatus('Salvando gravação...');
+        }
 
         try {
             await flushRecording({ silent: false });
@@ -533,13 +538,28 @@
         }
 
         cleanupCall();
-        window.location.replace(DASHBOARD_URL);
+        window.location.href = targetUrl;
+    }
+
+    async function goToDashboard(e) {
+        await leaveRoom(e, DASHBOARD_URL);
     }
 
     const btnBackNav = document.querySelector('.md-btn-back');
     if (btnBackNav) {
         btnBackNav.addEventListener('click', goToDashboard);
     }
+
+    document.querySelectorAll('.md-navbar a[href]').forEach((link) => {
+        link.addEventListener('click', (e) => {
+            const href = link.getAttribute('href');
+            if (!href || href.startsWith('#') || link === btnBackNav) return;
+            const url = new URL(href, window.location.href);
+            if (url.origin !== window.location.origin) return;
+            if (!roomCode || !shouldSaveRecordingBeforeLeave()) return;
+            leaveRoom(e, url.href);
+        });
+    });
 
     if (roomCode) {
         setInterval(handleSignals, 1200);

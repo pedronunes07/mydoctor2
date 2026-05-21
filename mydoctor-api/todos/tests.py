@@ -1,8 +1,9 @@
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
 
-from .models import Medico
+from .models import ChatRoom, Medico, Recording
 from .views import get_medico_by_numeric_crm, only_digits
 
 
@@ -49,3 +50,30 @@ class NumericInputTests(TestCase):
         Medico.objects.create(user=user, crm='CRM-12345', especialidade='clinico')
 
         self.assertEqual(get_medico_by_numeric_crm('12345').user, user)
+
+    def test_logged_patient_back_button_points_to_dashboard(self):
+        user = User.objects.create_user(username='paciente', password='SenhaForte123')
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('recorded_list'))
+
+        self.assertContains(response, f'href="{reverse("dashboard")}"')
+        self.assertContains(response, 'Voltar')
+
+    def test_recording_upload_saves_media(self):
+        user = User.objects.create_user(username='paciente', password='SenhaForte123')
+        room = ChatRoom.objects.create(code='abc123', created_by=user)
+        self.client.force_login(user)
+        media = SimpleUploadedFile('consulta.webm', b'webm-data', content_type='video/webm')
+
+        response = self.client.post(reverse('upload_recording_api', args=[room.code]), {
+            'file': media,
+            'duration': '12',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['ok'])
+        recording = Recording.objects.get(room=room)
+        self.assertEqual(recording.duration_seconds, 12)
+        self.assertTrue(recording.has_media())

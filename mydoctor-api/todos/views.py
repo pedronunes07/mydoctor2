@@ -246,6 +246,7 @@ def create_chat_room_view(request):
         ).select_related('consulta').order_by('-created_at')
     context = {
         'recordings_url': get_recordings_url(request.user),
+        'dashboard_url': get_panel_url(request.user),
         'consultas_do_medico': consultas,
         'consultas_paciente': consultas_paciente,
         'chat_rooms_do_paciente': salas_paciente,
@@ -329,6 +330,7 @@ def chat_room_view(request, code):
     context = {
         'room_code': room.code,
         'recordings_url': get_recordings_url(request.user),
+        'dashboard_url': get_panel_url(request.user),
         'invite_url': request.build_absolute_uri(),
     }
     return render(request, 'todos/chat.html', context)
@@ -456,7 +458,7 @@ def upload_recording_api(request, code):
         'ok': True,
         'id': rec.id,
         'playback_url': reverse('recording_playback', args=[rec.id]),
-        'list_url': reverse('recorded_list'),
+        'list_url': get_recordings_url(request.user),
     })
 
 
