@@ -13,11 +13,12 @@
         <li class="nav-item"><a class="nav-link" href="{% url 'home' %}#seguranca">Seguranca</a></li>
       {% endif %}
       {% if user.is_authenticated %}
+        <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}">Servicos</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'ver_consultas' %}">Consultas</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'chat_create' %}">Chat / Video</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'recorded_list' %}">Gravacoes</a></li>
         {% if user.medico %}
           <li class="nav-item"><a class="nav-link" href="{% url 'doctor_dashboard' %}">Painel Medico</a></li>
-        {% endif %}
-        {% if not user.medico or user.is_superuser %}
-          <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}">Servicos</a></li>
         {% endif %}
         {% if user.is_superuser %}
           <li class="nav-item"><a class="nav-link" href="{% url 'admin:index' %}">Admin</a></li>

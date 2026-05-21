@@ -69,6 +69,32 @@ class NumericInputTests(TestCase):
             response = self.client.get(reverse(url_name))
             self.assertRedirects(response, reverse('dashboard'))
 
+    def test_medico_login_lands_on_services_dashboard(self):
+        user = User.objects.create_user(
+            username='medico-login',
+            email='medico-login@example.com',
+            password='SenhaForte123',
+        )
+        Medico.objects.create(user=user, crm='7777', especialidade='clinico')
+
+        response = self.client.post(reverse('login'), {
+            'crm': '7777',
+            'password': 'SenhaForte123',
+        })
+
+        self.assertRedirects(response, reverse('dashboard'))
+
+    def test_logged_navbar_links_stay_in_authenticated_area(self):
+        user = User.objects.create_user(username='paciente-nav', password='SenhaForte123')
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('dashboard'))
+
+        self.assertContains(response, f'href="{reverse("dashboard")}"')
+        self.assertContains(response, f'href="{reverse("ver_consultas")}"')
+        self.assertContains(response, f'href="{reverse("chat_create")}"')
+        self.assertContains(response, f'href="{reverse("recorded_list")}"')
+
     def test_session_snapshot_restores_user_if_sqlite_resets(self):
         user = User.objects.create_user(
             username='paciente',

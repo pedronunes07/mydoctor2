@@ -90,13 +90,11 @@ def logout_view(request):
 
 @login_required
 def dashboard_view(request):
-    if user_has_medico(request.user) and not user_can_access_patient_area(request.user):
-        return redirect('doctor_dashboard')
-    context = {}
-    if user_can_access_patient_area(request.user):
-        context['consultas_recentes'] = Consulta.objects.filter(
-            usuario=request.user,
-        ).select_related('medico', 'medico__user').order_by('-data', '-hora')[:5]
+    context = {
+        'consultas_recentes': Consulta.objects.filter(
+            Q(usuario=request.user) | Q(medico__user=request.user)
+        ).select_related('medico', 'medico__user').distinct().order_by('-data', '-hora')[:5]
+    }
     return render(request, 'todos/dashboard.html', context)
 
 def login_view(request):
@@ -120,10 +118,6 @@ def login_view(request):
         if user is not None:
             login(request, user)
             request.session[AUTH_SNAPSHOT_KEY] = build_auth_snapshot(user)
-            if user.is_superuser:
-                return redirect('dashboard')
-            if user_has_medico(user):
-                return redirect('doctor_dashboard')
             return redirect('dashboard')
         else:
             messages.error(request, 'Email/CRM ou senha incorretos!')
@@ -175,7 +169,9 @@ def register_view(request):
 
 @login_required
 def ver_consultas_view(request):
-    consultas = Consulta.objects.filter(usuario=request.user).select_related('medico', 'medico__user').order_by('-data', '-hora')
+    consultas = Consulta.objects.filter(
+        Q(usuario=request.user) | Q(medico__user=request.user)
+    ).select_related('medico', 'medico__user').distinct().order_by('-data', '-hora')
     context = {
         'consultas': consultas,
         'voltar_url': get_panel_url(request.user),
@@ -244,17 +240,16 @@ def create_chat_room_view(request):
                 created_by=request.user,
             )
         return redirect('chat_room', code=room.code)
+    consultas = []
     if user_has_medico(request.user):
         consultas = Consulta.objects.filter(medico=request.user.medico).order_by('-data', '-hora')
-        consultas_paciente = []
-        salas_paciente = []
-    else:
-        consultas = []
-        consultas_paciente = Consulta.objects.filter(usuario=request.user).select_related('medico', 'medico__user').order_by('-data', '-hora')
-        salas_paciente = ChatRoom.objects.filter(
-            consulta__usuario=request.user,
-            closed_at__isnull=True,
-        ).select_related('consulta').order_by('-created_at')
+    consultas_paciente = Consulta.objects.filter(
+        Q(usuario=request.user) | Q(medico__user=request.user)
+    ).select_related('medico', 'medico__user').distinct().order_by('-data', '-hora')
+    salas_paciente = ChatRoom.objects.filter(
+        Q(consulta__usuario=request.user) | Q(consulta__medico__user=request.user) | Q(created_by=request.user),
+        closed_at__isnull=True,
+    ).select_related('consulta').distinct().order_by('-created_at')
     context = {
         'recordings_url': get_recordings_url(request.user),
         'dashboard_url': get_panel_url(request.user),
