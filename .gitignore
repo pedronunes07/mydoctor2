@@ -24,3 +24,4 @@ mydoctor/.env
 .DS_Store
 
 .vercel/
+.vercel
