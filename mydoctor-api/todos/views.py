@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 from .models import Todo, Consulta, ChatRoom, ChatMessage, ChatSignal, Recording, Medico, Receita
+from .utils import user_has_medico
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse, reverse_lazy
 from django.db.models import Q
@@ -86,7 +87,9 @@ def login_view(request):
                 user = None
         if user is not None:
             login(request, user)
-            if hasattr(user, 'medico'):
+            if user.is_superuser:
+                return redirect('dashboard')
+            if user_has_medico(user):
                 return redirect('doctor_dashboard')
             return redirect('dashboard')
         else:
@@ -174,7 +177,7 @@ def agendar_consulta_view(request):
 def create_chat_room_view(request):
     # POST: apenas médicos podem criar sala
     if request.method == 'POST':
-        if not hasattr(request.user, 'medico'):
+        if not user_has_medico(request.user):
             return redirect('dashboard')
         code = get_random_string(10)
         consulta_id = request.POST.get('consulta_id')
@@ -187,9 +190,8 @@ def create_chat_room_view(request):
         room = ChatRoom.objects.create(code=code, created_by=request.user, consulta=consulta)
         return redirect('chat_room', code=room.code)
     # GET exibe botão para criar sala
-    consultas = Consulta.objects.filter(medico=request.user.medico).order_by('-data', '-hora') if hasattr(request.user, 'medico') else []
-    # Também passamos salas disponíveis ao paciente, caso acesse esta rota
-    rooms_for_patient = ChatRoom.objects.filter(consulta__usuario=request.user, closed_at__isnull=True).order_by('-created_at') if not hasattr(request.user, 'medico') else []
+    consultas = Consulta.objects.filter(medico=request.user.medico).order_by('-data', '-hora') if user_has_medico(request.user) else []
+    rooms_for_patient = ChatRoom.objects.filter(consulta__usuario=request.user, closed_at__isnull=True).order_by('-created_at') if not user_has_medico(request.user) else []
     context = {
         'voltar_url': reverse('doctor_dashboard'),
         'consultas_do_medico': consultas,
@@ -201,7 +203,7 @@ def create_chat_room_view(request):
 # Dashboard do médico
 @login_required
 def doctor_dashboard_view(request):
-    if not hasattr(request.user, 'medico'):
+    if not user_has_medico(request.user):
         return redirect('dashboard')
     medico = request.user.medico
     consultas = Consulta.objects.filter(medico=medico).order_by('data', 'hora')
@@ -219,7 +221,7 @@ def doctor_dashboard_view(request):
 
 @login_required
 def doctor_accept_consulta_view(request, consulta_id):
-    if not hasattr(request.user, 'medico'):
+    if not user_has_medico(request.user):
         return redirect('dashboard')
     consulta = get_object_or_404(Consulta, id=consulta_id)
     consulta.medico = request.user.medico
@@ -231,7 +233,7 @@ def doctor_accept_consulta_view(request, consulta_id):
 @login_required
 def create_receita_view(request, consulta_id):
     consulta = get_object_or_404(Consulta, id=consulta_id)
-    if not hasattr(request.user, 'medico') or consulta.medico != request.user.medico:
+    if not user_has_medico(request.user) or consulta.medico != request.user.medico:
         messages.error(request, 'Apenas o médico responsável pode emitir receita/atestado desta consulta.')
         return redirect('doctor_dashboard')
     if request.method == 'POST':
@@ -268,7 +270,7 @@ def minhas_receitas_view(request):
 @login_required
 def chat_room_view(request, code):
     room = get_object_or_404(ChatRoom, code=code)
-    voltar = reverse('doctor_dashboard') if hasattr(request.user, 'medico') else reverse('dashboard')
+    voltar = reverse('doctor_dashboard') if user_has_medico(request.user) else reverse('dashboard')
     context = {
         'room_code': room.code,
         'voltar_url': voltar,
@@ -381,7 +383,7 @@ def recorded_list_view(request):
 # Gravações do médico
 @login_required
 def doctor_recordings_view(request):
-    if not hasattr(request.user, 'medico'):
+    if not user_has_medico(request.user):
         return redirect('dashboard')
     recs = Recording.objects.select_related('room', 'room__consulta', 'uploaded_by')
     recs = recs.filter(room__consulta__medico=request.user.medico) | recs.filter(room__created_by=request.user)

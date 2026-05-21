@@ -3,6 +3,8 @@ import os
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
+from todos.models import Medico
+
 
 class Command(BaseCommand):
     help = 'Cria conta de administrador para testes (superuser).'
@@ -44,3 +46,14 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING(f'Admin atualizado: {username}'))
         else:
             self.stdout.write(self.style.NOTICE(f'Admin já existe: {username} (use --force para resetar senha)'))
+
+        crm = os.environ.get('ADMIN_CRM', 'ADMIN-0001')
+        especialidade = os.environ.get('ADMIN_ESPECIALIDADE', 'clinico')
+        medico, medico_created = Medico.objects.update_or_create(
+            user=user,
+            defaults={'crm': crm, 'especialidade': especialidade},
+        )
+        if medico_created:
+            self.stdout.write(self.style.SUCCESS(f'Perfil médico criado: CRM {crm} ({especialidade})'))
+        else:
+            self.stdout.write(self.style.SUCCESS(f'Perfil médico atualizado: CRM {crm}'))

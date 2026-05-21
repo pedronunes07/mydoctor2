@@ -46,6 +46,10 @@ Após o deploy, o comando `create_admin` roda automaticamente. **Padrão** (se n
 | E-mail (login do site) | `admin@mydoctor.local` |
 | Senha | `Admin@MyDoctor2026` |
 | Painel Django | `/admin/` |
+| CRM (médico) | `ADMIN-0001` |
+| Especialidade | Clínico Geral |
+
+O admin também tem **perfil de médico**: use **Painel Médico** no menu ou **Serviços (Paciente)** para testar as duas áreas.
 
 ## Redeploy correto
 
