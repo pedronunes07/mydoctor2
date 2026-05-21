@@ -108,14 +108,15 @@ STATICFILES_DIRS = [
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-if os.environ.get('VERCEL'):
+_ON_VERCEL = bool(os.environ.get('VERCEL') or os.environ.get('VERCEL_ENV'))
+
+if _ON_VERCEL:
     DEBUG = os.environ.get('DEBUG', 'False').lower() in ('1', 'true', 'yes')
     DATABASES['default']['NAME'] = '/tmp/db.sqlite3'
     MEDIA_ROOT = '/tmp/media'
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     WHITENOISE_USE_FINDERS = True
-    WHITENOISE_ROOT = BASE_DIR / 'todos' / 'static' / 'todos'
     CSRF_TRUSTED_ORIGINS = [
         origin.strip()
         for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')

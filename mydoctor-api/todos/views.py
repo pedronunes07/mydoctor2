@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from .models import Todo, Consulta, ChatRoom, ChatMessage, ChatSignal, Recording, Medico, Receita
 from django.contrib.auth.decorators import login_required
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.utils import timezone
@@ -17,7 +17,7 @@ from django.views.decorators.csrf import csrf_exempt
 # Create your views here.
 from django.shortcuts import render
 from django.views.generic import CreateView, ListView
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 
 def voltar_para_index(request):
     return redirect('home')
@@ -28,7 +28,7 @@ class TodoListView(ListView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['voltar_url'] = reverse_lazy('home')
+        context['voltar_url'] = reverse('home')
         return context
 
 class TodoCreateView(CreateView):
@@ -39,7 +39,7 @@ class TodoCreateView(CreateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['voltar_url'] = reverse_lazy('home')
+        context['voltar_url'] = reverse('home')
         return context
 
 class HomeView(TemplateView):
@@ -56,7 +56,7 @@ def logout_view(request):
 
 @login_required
 def dashboard_view(request):
-    context = {'voltar_url': reverse_lazy('home')}
+    context = {'voltar_url': reverse('home')}
     if request.user.is_authenticated:
         # Salas disponíveis para o paciente (vinculadas às consultas dele)
         try:
@@ -94,7 +94,7 @@ def login_view(request):
     else:
         # Limpa mensagens pendentes (ex.: avisos de outras páginas)
         list(messages.get_messages(request))
-    context = {'voltar_url': reverse_lazy('home')}
+    context = {'voltar_url': reverse('home')}
     return render(request, 'todos/login.html', context)
 
 def register_view(request):
@@ -130,7 +130,7 @@ def register_view(request):
                 Medico.objects.create(user=user, crm=crm, especialidade=especialidade)
             messages.success(request, 'Cadastro realizado com sucesso! Faça login.')
             return redirect('login')
-    context = {'voltar_url': reverse_lazy('home')}
+    context = {'voltar_url': reverse('home')}
     return render(request, 'todos/register.html', context)
 
 @login_required
@@ -138,7 +138,7 @@ def ver_consultas_view(request):
     consultas = Consulta.objects.filter(usuario=request.user).order_by('-data', '-hora')
     context = {
         'consultas': consultas,
-        'voltar_url': reverse_lazy('home')
+        'voltar_url': reverse('home')
     }
     return render(request, 'todos/ver_consultas.html', context)
 
@@ -165,7 +165,7 @@ def agendar_consulta_view(request):
         except Exception:
             pass
         return redirect('ver_consultas')
-    context = {'voltar_url': reverse_lazy('home')}
+    context = {'voltar_url': reverse('home')}
     return render(request, 'todos/agendar_consulta.html', context)
 
 
@@ -191,7 +191,7 @@ def create_chat_room_view(request):
     # Também passamos salas disponíveis ao paciente, caso acesse esta rota
     rooms_for_patient = ChatRoom.objects.filter(consulta__usuario=request.user, closed_at__isnull=True).order_by('-created_at') if not hasattr(request.user, 'medico') else []
     context = {
-        'voltar_url': reverse_lazy('doctor_dashboard'),
+        'voltar_url': reverse('doctor_dashboard'),
         'consultas_do_medico': consultas,
         'chat_rooms_do_paciente': rooms_for_patient,
     }
@@ -212,7 +212,7 @@ def doctor_dashboard_view(request):
     context = {
         'consultas': consultas,
         'pendentes': pendentes,
-        'voltar_url': reverse_lazy('home')
+        'voltar_url': reverse('home')
     }
     return render(request, 'todos/doctor_dashboard.html', context)
 
@@ -251,7 +251,7 @@ def create_receita_view(request, consulta_id):
             )
             messages.success(request, 'Documento emitido com sucesso.')
             return redirect('doctor_dashboard')
-    context = {'consulta': consulta, 'voltar_url': reverse_lazy('doctor_dashboard')}
+    context = {'consulta': consulta, 'voltar_url': reverse('doctor_dashboard')}
     return render(request, 'todos/receita_form.html', context)
 
 
@@ -260,7 +260,7 @@ def minhas_receitas_view(request):
     receitas = Receita.objects.filter(paciente=request.user).select_related('consulta', 'medico', 'medico__user')
     context = {
         'receitas': receitas,
-        'voltar_url': reverse_lazy('dashboard')
+        'voltar_url': reverse('dashboard')
     }
     return render(request, 'todos/receitas_paciente.html', context)
 
@@ -268,7 +268,7 @@ def minhas_receitas_view(request):
 @login_required
 def chat_room_view(request, code):
     room = get_object_or_404(ChatRoom, code=code)
-    voltar = reverse_lazy('doctor_dashboard') if hasattr(request.user, 'medico') else reverse_lazy('dashboard')
+    voltar = reverse('doctor_dashboard') if hasattr(request.user, 'medico') else reverse('dashboard')
     context = {
         'room_code': room.code,
         'voltar_url': voltar,
@@ -374,7 +374,7 @@ def recorded_list_view(request):
     recs = Recording.objects.filter(
         Q(uploaded_by=request.user) | Q(room__consulta__usuario=request.user)
     ).select_related('room', 'uploaded_by').distinct().order_by('-created_at')
-    context = { 'recordings': recs, 'voltar_url': reverse_lazy('dashboard') }
+    context = { 'recordings': recs, 'voltar_url': reverse('dashboard') }
     return render(request, 'todos/recorded_list.html', context)
 
 
@@ -386,7 +386,7 @@ def doctor_recordings_view(request):
     recs = Recording.objects.select_related('room', 'room__consulta', 'uploaded_by')
     recs = recs.filter(room__consulta__medico=request.user.medico) | recs.filter(room__created_by=request.user)
     recs = recs.order_by('-created_at')
-    context = { 'recordings': recs, 'voltar_url': reverse_lazy('doctor_dashboard') }
+    context = { 'recordings': recs, 'voltar_url': reverse('doctor_dashboard') }
     return render(request, 'todos/recorded_list.html', context)
 
 

@@ -1,16 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "python3 -m pip install --upgrade pip && python3 -m pip install -r requirements.txt",
-  "buildCommand": "python3 manage.py migrate --noinput && python3 manage.py collectstatic --noinput",
+  "buildCommand": "python3 manage.py collectstatic --noinput",
   "builds": [
     {
       "src": "projeto/wsgi.py",
       "use": "@vercel/python",
       "config": {
-        "includeFiles": [
-          "staticfiles/**",
-          "todos/static/**"
-        ]
+        "includeFiles": "todos/static/**"
       }
     }
   ],

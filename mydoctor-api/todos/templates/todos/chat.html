@@ -38,7 +38,7 @@
                         <button id="btnCopyInvite" class="btn btn-outline-primary">Copiar link</button>
                     </div>
                 {% else %}
-                    {% if user.medico %}
+                    {% if user.is_authenticated and user.medico %}
                         <form method="post" action="" class="d-flex" style="gap:8px; align-items:center; flex-wrap:wrap;">
                             {% csrf_token %}
                             <div>

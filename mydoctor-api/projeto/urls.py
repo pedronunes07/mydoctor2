@@ -10,5 +10,5 @@ urlpatterns = [
     path('', include('todos.urls')),
 ]
 
-if settings.DEBUG or os.environ.get('VERCEL'):
+if settings.DEBUG or os.environ.get('VERCEL') or os.environ.get('VERCEL_ENV'):
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
