@@ -1,9 +1,14 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
+{% if user.medico %}
+  {% url 'doctor_dashboard' as panel_url %}
+{% else %}
+  {% url 'dashboard' as panel_url %}
+{% endif %}
 {% include 'todos/_head.html' with page_title='Consulta' %}
 <body>
-{% include 'todos/_navbar.html' with voltar_url=voltar_url %}
+{% include 'todos/_navbar.html' with voltar_url=panel_url %}
 {% include 'todos/_messages.html' %}
 
 <main class="md-main md-chat-wrap">
@@ -424,8 +429,8 @@
             alert(opts.message);
         }
 
-        if (redirect && EXIT_URL) {
-            window.location.href = EXIT_URL;
+        if (redirect && PANEL_URL) {
+            window.location.assign(PANEL_URL);
         } else {
             callEnded = false;
         }
@@ -445,15 +450,28 @@
         btnVideo.textContent = isVideoOff ? 'Vídeo ligar' : 'Vídeo on/off';
     }
 
-    const EXIT_URL = "{{ voltar_url|default:'' }}";
+    const PANEL_URL = "{{ panel_url }}";
+
+    function goToPanel() {
+        cleanupCall();
+        if (PANEL_URL) {
+            window.location.assign(PANEL_URL);
+        }
+    }
+
+    const btnBackNav = document.querySelector('.md-btn-back');
+    if (btnBackNav) {
+        btnBackNav.addEventListener('click', (e) => {
+            e.preventDefault();
+            goToPanel();
+        });
+    }
 
     if (roomCode) {
         setInterval(handleSignals, 1200);
     }
     if (btnStart) {
-        btnStart.addEventListener('click', () => {
-            if (EXIT_URL) window.location.href = EXIT_URL;
-        });
+        btnStart.addEventListener('click', goToPanel);
         btnStartVideo.addEventListener('click', () => startCall('video').catch(e => alert('Permita câmera/microfone: ' + e)));
         btnStartAudio.addEventListener('click', () => startCall('audio').catch(e => alert('Permita microfone: ' + e)));
         btnHangup.addEventListener('click', () => {

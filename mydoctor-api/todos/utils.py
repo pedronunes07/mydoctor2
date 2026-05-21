@@ -1,6 +1,16 @@
+from django.urls import reverse
 from django.utils.crypto import get_random_string
 
 from .models import ChatRoom, Medico
+
+
+def get_panel_url(user):
+    """URL do painel principal do usuário logado (permanece na área autenticada)."""
+    if not user.is_authenticated:
+        return reverse('home')
+    if user_has_medico(user):
+        return reverse('doctor_dashboard')
+    return reverse('dashboard')
 
 
 def user_has_medico(user):

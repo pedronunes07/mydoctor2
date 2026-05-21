@@ -11,6 +11,7 @@ from .utils import (
     user_can_access_room,
     get_or_create_room_for_consulta,
     user_can_access_recording,
+    get_panel_url,
 )
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse, reverse_lazy
@@ -67,7 +68,9 @@ def logout_view(request):
 
 @login_required
 def dashboard_view(request):
-    context = {'voltar_url': reverse('home')}
+    if user_has_medico(request.user) and not user_can_access_patient_area(request.user):
+        return redirect('doctor_dashboard')
+    context = {}
     if user_can_access_patient_area(request.user):
         context['consultas_recentes'] = Consulta.objects.filter(
             usuario=request.user,
@@ -148,7 +151,7 @@ def ver_consultas_view(request):
     consultas = Consulta.objects.filter(usuario=request.user).select_related('medico', 'medico__user').order_by('-data', '-hora')
     context = {
         'consultas': consultas,
-        'voltar_url': reverse('home')
+        'voltar_url': get_panel_url(request.user),
     }
     return render(request, 'todos/ver_consultas.html', context)
 
@@ -176,7 +179,7 @@ def agendar_consulta_view(request):
             pass
         messages.success(request, 'Consulta agendada! Aguarde o médico assumir ou entre na ligação em Ver Consultas.')
         return redirect('ver_consultas')
-    context = {'voltar_url': reverse('home')}
+    context = {'voltar_url': get_panel_url(request.user)}
     return render(request, 'todos/agendar_consulta.html', context)
 
 
@@ -216,19 +219,17 @@ def create_chat_room_view(request):
         return redirect('chat_room', code=room.code)
     if user_has_medico(request.user):
         consultas = Consulta.objects.filter(medico=request.user.medico).order_by('-data', '-hora')
-        voltar = reverse('doctor_dashboard')
         consultas_paciente = []
         salas_paciente = []
     else:
         consultas = []
-        voltar = reverse('dashboard')
         consultas_paciente = Consulta.objects.filter(usuario=request.user).select_related('medico', 'medico__user').order_by('-data', '-hora')
         salas_paciente = ChatRoom.objects.filter(
             consulta__usuario=request.user,
             closed_at__isnull=True,
         ).select_related('consulta').order_by('-created_at')
     context = {
-        'voltar_url': voltar,
+        'voltar_url': get_panel_url(request.user),
         'consultas_do_medico': consultas,
         'consultas_paciente': consultas_paciente,
         'chat_rooms_do_paciente': salas_paciente,
@@ -250,7 +251,6 @@ def doctor_dashboard_view(request):
     context = {
         'consultas': consultas,
         'pendentes': pendentes,
-        'voltar_url': reverse('home')
     }
     return render(request, 'todos/doctor_dashboard.html', context)
 
@@ -290,7 +290,7 @@ def create_receita_view(request, consulta_id):
             )
             messages.success(request, 'Documento emitido com sucesso.')
             return redirect('doctor_dashboard')
-    context = {'consulta': consulta, 'voltar_url': reverse('doctor_dashboard')}
+    context = {'consulta': consulta, 'voltar_url': get_panel_url(request.user)}
     return render(request, 'todos/receita_form.html', context)
 
 
@@ -299,7 +299,7 @@ def minhas_receitas_view(request):
     receitas = Receita.objects.filter(paciente=request.user).select_related('consulta', 'medico', 'medico__user')
     context = {
         'receitas': receitas,
-        'voltar_url': reverse('dashboard')
+        'voltar_url': get_panel_url(request.user),
     }
     return render(request, 'todos/receitas_paciente.html', context)
 
@@ -310,10 +310,9 @@ def chat_room_view(request, code):
     if not user_can_access_room(request.user, room):
         messages.error(request, 'Você não tem acesso a esta sala.')
         return redirect('dashboard')
-    voltar = reverse('doctor_dashboard') if user_has_medico(request.user) else reverse('dashboard')
     context = {
         'room_code': room.code,
-        'voltar_url': voltar,
+        'voltar_url': get_panel_url(request.user),
         'invite_url': request.build_absolute_uri()
     }
     return render(request, 'todos/chat.html', context)
@@ -467,7 +466,7 @@ def recorded_list_view(request):
     recs = Recording.objects.filter(
         Q(uploaded_by=request.user) | Q(room__consulta__usuario=request.user)
     ).select_related('room', 'uploaded_by').distinct().order_by('-created_at')
-    context = { 'recordings': recs, 'voltar_url': reverse('dashboard') }
+    context = { 'recordings': recs, 'voltar_url': get_panel_url(request.user) }
     return render(request, 'todos/recorded_list.html', context)
 
 
@@ -479,7 +478,7 @@ def doctor_recordings_view(request):
     recs = Recording.objects.select_related('room', 'room__consulta', 'uploaded_by')
     recs = recs.filter(room__consulta__medico=request.user.medico) | recs.filter(room__created_by=request.user)
     recs = recs.order_by('-created_at')
-    context = { 'recordings': recs, 'voltar_url': reverse('doctor_dashboard') }
+    context = { 'recordings': recs, 'voltar_url': get_panel_url(request.user) }
     return render(request, 'todos/recorded_list.html', context)
 
 
