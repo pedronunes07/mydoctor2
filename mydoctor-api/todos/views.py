@@ -12,6 +12,7 @@ from .utils import (
     get_or_create_room_for_consulta,
     user_can_access_recording,
     get_panel_url,
+    get_recordings_url,
 )
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse, reverse_lazy
@@ -232,6 +233,8 @@ def create_chat_room_view(request):
     context = {
         'voltar_url': panel,
         'panel_url': panel,
+        'recordings_url': get_recordings_url(request.user),
+        'is_doctor_panel': user_has_medico(request.user),
         'consultas_do_medico': consultas,
         'consultas_paciente': consultas_paciente,
         'chat_rooms_do_paciente': salas_paciente,
@@ -317,6 +320,8 @@ def chat_room_view(request, code):
         'room_code': room.code,
         'voltar_url': panel,
         'panel_url': panel,
+        'recordings_url': get_recordings_url(request.user),
+        'is_doctor_panel': user_has_medico(request.user),
         'invite_url': request.build_absolute_uri(),
     }
     return render(request, 'todos/chat.html', context)

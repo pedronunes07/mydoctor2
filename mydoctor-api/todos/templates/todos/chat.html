@@ -326,30 +326,58 @@
         return mix.getTracks().length ? mix : null;
     }
 
+    function isRecordingActive() {
+        return mediaRecorder && mediaRecorder.state === 'recording';
+    }
+
+    function waitMs(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    async function waitForUploadComplete(timeoutMs = 90000) {
+        const start = Date.now();
+        while (uploadInProgress && Date.now() - start < timeoutMs) {
+            await waitMs(250);
+        }
+    }
+
     async function uploadRecordingBlob(silent = false) {
-        if (!recordedChunks.length) return false;
+        if (!recordedChunks.length || !roomCode) return false;
         const blob = new Blob(recordedChunks, { type: 'video/webm' });
         if (!blob.size) return false;
         const secs = recordingStartedAt ? Math.round((Date.now() - recordingStartedAt) / 1000) : 0;
         const form = new FormData();
         form.append('file', blob, `gravacao_${Date.now()}.webm`);
         form.append('duration', String(secs));
-        const r = await fetch(`/api/chat/${roomCode}/upload-recording/`, {
-            method: 'POST',
-            body: form,
-            credentials: 'same-origin',
-            headers: { 'X-CSRFToken': getCookie('csrftoken') },
-        });
-        let data = {};
-        try { data = await r.json(); } catch (e) {}
-        if (!r.ok || !data.ok) {
-            alert('Falha ao salvar gravação: ' + (data.error || r.status));
-            return false;
+        const csrf = getCookie('csrftoken');
+        if (csrf) {
+            form.append('csrfmiddlewaretoken', csrf);
         }
-        if (!silent) {
-            showCallStatus('Gravação salva. Veja em Consultas Gravadas.');
+        uploadInProgress = true;
+        try {
+            const r = await fetch(`/api/chat/${roomCode}/upload-recording/`, {
+                method: 'POST',
+                body: form,
+                credentials: 'same-origin',
+                headers: csrf ? { 'X-CSRFToken': csrf } : {},
+            });
+            let data = {};
+            try { data = await r.json(); } catch (e) {}
+            if (!r.ok || !data.ok) {
+                const msg = data.error || ('HTTP ' + r.status);
+                if (!silent) {
+                    showCallStatus('Falha ao salvar gravação: ' + msg);
+                }
+                return false;
+            }
+            recordedChunks = [];
+            if (!silent) {
+                showCallStatus('Gravação salva com sucesso.');
+            }
+            return true;
+        } finally {
+            uploadInProgress = false;
         }
-        return true;
     }
 
     function stopRecordingAndUpload(silent = false) {
@@ -359,14 +387,38 @@
                 return;
             }
             mediaRecorder.onstop = async () => {
-                uploadInProgress = true;
                 await uploadRecordingBlob(silent);
-                uploadInProgress = false;
-                recordedChunks = [];
+                if (btnRec) btnRec.disabled = false;
+                if (btnStopRec) btnStopRec.disabled = true;
                 resolve(true);
             };
-            mediaRecorder.stop();
+            try {
+                mediaRecorder.stop();
+            } catch (e) {
+                console.warn(e);
+                resolve(uploadRecordingBlob(silent));
+            }
         });
+    }
+
+    async function flushRecording(opts = {}) {
+        const silent = opts.silent === true;
+        if (isRecordingActive()) {
+            showCallStatus('Finalizando e enviando gravação...');
+            await stopRecordingAndUpload(silent);
+            await waitForUploadComplete();
+            return true;
+        }
+        if (uploadInProgress) {
+            showCallStatus('Aguardando envio da gravação...');
+            await waitForUploadComplete();
+            return true;
+        }
+        if (recordedChunks.length) {
+            showCallStatus('Enviando gravação...');
+            return await uploadRecordingBlob(silent);
+        }
+        return false;
     }
 
     let endingCall = false;
@@ -414,15 +466,8 @@
         const notifyRemote = opts.notifyRemote !== false;
 
         try {
-            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-                try {
-                    await Promise.race([
-                        stopRecordingAndUpload(true),
-                        new Promise((_, reject) => setTimeout(() => reject(new Error('upload timeout')), 10000)),
-                    ]);
-                } catch (e) {
-                    console.warn('Gravação ao encerrar:', e);
-                }
+            if (!opts.skipRecording) {
+                await flushRecording({ silent: opts.silentUpload === true });
             }
             if (notifyRemote && roomCode) {
                 ignoreEndSignalsUntil = Date.now() + 8000;
@@ -433,7 +478,11 @@
         } finally {
             cleanupCall();
             endingCall = false;
-            showCallStatus(opts.message || 'Ligação encerrada. Você continua na sala — pode chamar de novo ou voltar ao painel.');
+            if (opts.message) {
+                showCallStatus(opts.message);
+            } else if (!opts.skipRecording) {
+                showCallStatus('Ligação encerrada. Você continua na sala — pode chamar de novo ou voltar ao painel.');
+            }
         }
     }
 
@@ -451,16 +500,43 @@
         btnVideo.textContent = isVideoOff ? 'Vídeo ligar' : 'Vídeo on/off';
     }
 
-    const PANEL_URL = "{{ panel_url|default:'' }}";
+    const PANEL_URL = "{{ panel_url }}";
+    const PANEL_FALLBACK = "{% if is_doctor_panel %}{% url 'doctor_dashboard' %}{% else %}{% url 'dashboard' %}{% endif %}";
+    const RECORDINGS_URL = "{{ recordings_url }}";
+    let leavingPage = false;
+
+    function panelDestination() {
+        const url = (PANEL_URL || '').trim();
+        return (url && url.charAt(0) === '/') ? url : PANEL_FALLBACK;
+    }
+
+    function setPanelButtonsDisabled(disabled) {
+        [btnStart, btnBackNav, btnHangup].forEach((el) => { if (el) el.disabled = disabled; });
+    }
 
     async function goToPanel() {
-        if (inCall || pc || localStream) {
-            await endCallLocal({ notifyRemote: true, message: 'Ligação encerrada.' });
-        } else {
-            cleanupCall();
-        }
-        if (PANEL_URL) {
-            window.location.assign(PANEL_URL);
+        if (leavingPage) return;
+        leavingPage = true;
+        setPanelButtonsDisabled(true);
+        showCallStatus('Salvando gravação e voltando ao painel...');
+
+        try {
+            await flushRecording({ silent: false });
+            if (inCall || pc || localStream) {
+                await endCallLocal({
+                    notifyRemote: true,
+                    skipRecording: true,
+                    message: 'Ligação encerrada. Voltando ao painel...',
+                });
+            } else {
+                cleanupCall();
+            }
+            window.location.href = panelDestination();
+        } catch (e) {
+            console.error(e);
+            leavingPage = false;
+            setPanelButtonsDisabled(false);
+            showCallStatus('Não foi possível sair agora. Tente Parar gravação e clique de novo.');
         }
     }
 
@@ -538,10 +614,7 @@
         recordingStartedAt = Date.now();
         mediaRecorder.ondataavailable = e => { if (e.data && e.data.size) recordedChunks.push(e.data); };
         mediaRecorder.onstop = async () => {
-            if (uploadInProgress) return;
-            uploadInProgress = true;
-            await uploadRecordingBlob();
-            uploadInProgress = false;
+            await uploadRecordingBlob(false);
             if (btnRec) btnRec.disabled = false;
             if (btnStopRec) btnStopRec.disabled = true;
         };
@@ -550,14 +623,14 @@
         if (btnStopRec) btnStopRec.disabled = false;
     }
 
-    function stopRecording() {
-        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-            mediaRecorder.stop();
-        }
+    async function stopRecording() {
+        if (!mediaRecorder || mediaRecorder.state === 'inactive') return;
+        showCallStatus('Finalizando gravação...');
+        await stopRecordingAndUpload(false);
     }
 
     if (btnRec) btnRec.addEventListener('click', startRecording);
-    if (btnStopRec) btnStopRec.addEventListener('click', stopRecording);
+    if (btnStopRec) btnStopRec.addEventListener('click', () => stopRecording().catch(e => console.warn(e)));
     </script>
 </body>
 </html>

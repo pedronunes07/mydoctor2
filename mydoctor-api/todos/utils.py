@@ -13,6 +13,14 @@ def get_panel_url(user):
     return reverse('dashboard')
 
 
+def get_recordings_url(user):
+    if not user.is_authenticated:
+        return reverse('home')
+    if user_has_medico(user):
+        return reverse('doctor_recordings')
+    return reverse('recorded_list')
+
+
 def user_has_medico(user):
     """True se o usuário tem perfil de médico vinculado."""
     if not user.is_authenticated:
