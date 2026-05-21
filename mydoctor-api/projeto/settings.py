@@ -44,6 +44,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'todos.middleware.SignedCookieAuthRecoveryMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -145,6 +146,12 @@ if _ON_VERCEL:
         for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
         if origin.strip()
     ]
+    for origin in (
+        'https://*.vercel.app',
+        'https://pedronunes07-mydoctor2-git-https-gi.vercel.app',
+    ):
+        if origin not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(origin)
     if _vercel_url:
         origin = f'https://{_vercel_url}'
         if origin not in CSRF_TRUSTED_ORIGINS:

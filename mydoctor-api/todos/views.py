@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 from .models import Todo, Consulta, ChatRoom, ChatMessage, ChatSignal, Recording, Medico, Receita
+from .middleware import AUTH_SNAPSHOT_KEY, build_auth_snapshot
 from .utils import (
     user_has_medico,
     user_can_access_patient_area,
@@ -118,6 +119,7 @@ def login_view(request):
                 user = None
         if user is not None:
             login(request, user)
+            request.session[AUTH_SNAPSHOT_KEY] = build_auth_snapshot(user)
             if user.is_superuser:
                 return redirect('dashboard')
             if user_has_medico(user):

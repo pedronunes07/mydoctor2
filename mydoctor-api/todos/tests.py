@@ -69,6 +69,21 @@ class NumericInputTests(TestCase):
             response = self.client.get(reverse(url_name))
             self.assertRedirects(response, reverse('dashboard'))
 
+    def test_session_snapshot_restores_user_if_sqlite_resets(self):
+        user = User.objects.create_user(
+            username='paciente',
+            email='paciente@example.com',
+            password='SenhaForte123',
+        )
+        self.client.force_login(user)
+        self.client.get(reverse('dashboard'))
+        user.delete()
+
+        response = self.client.get(reverse('dashboard'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(User.objects.filter(username='paciente').exists())
+
     def test_logged_users_return_to_services_dashboard(self):
         doctor = User.objects.create_user(username='doctor-user', password='SenhaForte123')
         Medico.objects.create(user=doctor, crm='8888', especialidade='clinico')
