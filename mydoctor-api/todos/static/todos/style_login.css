@@ -55,6 +55,7 @@ h3 {
 }
 
 input[type="email"],
+input[type="tel"],
 input[type="password"] {
     width: 100%;
     padding: 14px 16px;
@@ -70,6 +71,7 @@ input[type="password"] {
 }
 
 input[type="email"]:focus,
+input[type="tel"]:focus,
 input[type="password"]:focus {
     border-color: #43a047;
     box-shadow: 0 0 0 2px #c8e6c9;

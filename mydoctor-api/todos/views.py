@@ -26,6 +26,7 @@ from django.views.decorators.http import require_http_methods
 from django.utils.crypto import get_random_string
 import json
 from django.views.decorators.csrf import csrf_exempt
+import re
 
 # Create your views here.
 from django.shortcuts import render
@@ -62,6 +63,20 @@ def health_view(request):
     return JsonResponse({'status': 'ok'})
 
 
+def only_digits(value):
+    return re.sub(r'\D', '', value or '')
+
+
+def get_medico_by_numeric_crm(crm):
+    try:
+        return Medico.objects.select_related('user').get(crm=crm)
+    except Medico.DoesNotExist:
+        for medico in Medico.objects.select_related('user').all():
+            if only_digits(medico.crm) == crm:
+                return medico
+    return None
+
+
 def logout_view(request):
     logout(request)
     return redirect('home')
@@ -81,15 +96,13 @@ def dashboard_view(request):
 def login_view(request):
     if request.method == 'POST':
         email = request.POST.get('email')
-        crm = request.POST.get('crm')
+        crm = only_digits(request.POST.get('crm'))
         password = request.POST.get('password')
         user = None
         if crm:
-            try:
-                med = Medico.objects.select_related('user').get(crm=crm)
+            med = get_medico_by_numeric_crm(crm)
+            if med:
                 user = authenticate(request, username=med.user.username, password=password)
-            except Medico.DoesNotExist:
-                user = None
         elif email:
             try:
                 u = User.objects.get(email=email)
@@ -118,10 +131,10 @@ def register_view(request):
         password = request.POST['password']
         password2 = request.POST['password2']
         full_name = request.POST.get('full_name', '')
-        phone = request.POST.get('phone', '')
+        phone = only_digits(request.POST.get('phone', ''))
         birthdate = request.POST.get('birthdate', '')
         is_medico = request.POST.get('is_medico') == 'on'
-        crm = request.POST.get('crm', '').strip()
+        crm = only_digits(request.POST.get('crm', ''))
         especialidade = request.POST.get('especialidade', '').strip()
         if password != password2:
             messages.error(request, 'As senhas não coincidem!')
@@ -129,9 +142,11 @@ def register_view(request):
             messages.error(request, 'Nome de usuário já existe!')
         elif User.objects.filter(email=email).exists():
             messages.error(request, 'E-mail já cadastrado!')
+        elif not phone:
+            messages.error(request, 'Telefone deve conter apenas números!')
         elif is_medico and not crm:
             messages.error(request, 'CRM é obrigatório para cadastro de médico!')
-        elif is_medico and Medico.objects.filter(crm=crm).exists():
+        elif is_medico and get_medico_by_numeric_crm(crm):
             messages.error(request, 'CRM já cadastrado!')
         elif is_medico and not especialidade:
             messages.error(request, 'Selecione a especialidade do médico!')

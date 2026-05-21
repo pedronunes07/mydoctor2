@@ -1,4 +1,5 @@
 import os
+import re
 
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
@@ -47,7 +48,7 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.NOTICE(f'Admin já existe: {username} (use --force para resetar senha)'))
 
-        crm = os.environ.get('ADMIN_CRM', 'ADMIN-0001')
+        crm = re.sub(r'\D', '', os.environ.get('ADMIN_CRM', '0001')) or '0001'
         especialidade = os.environ.get('ADMIN_ESPECIALIDADE', 'clinico')
         medico, medico_created = Medico.objects.update_or_create(
             user=user,

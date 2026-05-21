@@ -35,6 +35,7 @@ O `mydoctor-api/vercel.json` já define install, build, WSGI e rotas — **não*
 | `ADMIN_USERNAME` | `admin` (opcional) |
 | `ADMIN_EMAIL` | `admin@mydoctor.local` (opcional) |
 | `ADMIN_PASSWORD` | senha forte da sua escolha (recomendado em produção) |
+| `DATABASE_URL` ou `POSTGRES_URL` | URL do Postgres para dados persistentes (recomendado) |
 
 ## Conta admin de teste
 
@@ -46,7 +47,7 @@ Após o deploy, o comando `create_admin` roda automaticamente. **Padrão** (se n
 | E-mail (login do site) | `admin@mydoctor.local` |
 | Senha | `Admin@MyDoctor2026` |
 | Painel Django | `/admin/` |
-| CRM (médico) | `ADMIN-0001` |
+| CRM (médico) | `0001` |
 | Especialidade | Clínico Geral |
 
 O admin também tem **perfil de médico**: use **Painel Médico** no menu ou **Serviços (Paciente)** para testar as duas áreas.
@@ -80,7 +81,7 @@ O admin também tem **perfil de médico**: use **Painel Médico** no menu ou **S
 | `/medico/dashboard/` | Painel do médico |
 | `/health/` | Status da API |
 
-**Nota:** na Vercel o SQLite fica em `/tmp` (dados podem sumir entre deploys). Para produção persistente use Postgres.
+**Nota:** na Vercel o SQLite fica em `/tmp` (dados podem sumir entre deploys). Para produção persistente, configure `DATABASE_URL` ou `POSTGRES_URL` com um banco Postgres.
 
 ## CSS sem estilo (página em branco / links azuis)
 

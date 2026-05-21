@@ -363,6 +363,7 @@ a:hover { color: var(--md-teal-light); text-decoration: none; }
 }
 
 .md-auth-card input[type="text"],
+.md-auth-card input[type="tel"],
 .md-auth-card input[type="email"],
 .md-auth-card input[type="password"],
 .md-auth-card input[type="date"],

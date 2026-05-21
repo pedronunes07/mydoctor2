@@ -12,7 +12,16 @@
     <form method="post">
       {% csrf_token %}
       <input type="text" name="full_name" required placeholder="Nome completo">
-      <input type="text" name="phone" required placeholder="Telefone">
+      <input
+        type="tel"
+        name="phone"
+        required
+        inputmode="numeric"
+        pattern="[0-9]+"
+        maxlength="15"
+        placeholder="Telefone"
+        oninput="this.value = this.value.replace(/\D/g, '')"
+        title="Digite apenas números">
       <input type="text" name="username" required placeholder="Nome de usuário">
       <input type="date" name="birthdate" required title="Data de nascimento">
       <input type="email" name="email" required placeholder="E-mail">
@@ -20,7 +29,15 @@
         <input class="form-check-input" type="checkbox" id="is_medico" name="is_medico">
         <label class="form-check-label" for="is_medico">Sou médico</label>
       </div>
-      <input type="text" name="crm" placeholder="CRM (se médico)">
+      <input
+        type="tel"
+        name="crm"
+        inputmode="numeric"
+        pattern="[0-9]+"
+        maxlength="12"
+        placeholder="CRM (somente números, se médico)"
+        oninput="this.value = this.value.replace(/\D/g, '')"
+        title="Digite apenas números">
       <select name="especialidade" class="w-100" style="padding:0.85rem 1rem;border-radius:10px;border:1px solid var(--md-border);margin-bottom:0.75rem;">
         <option value="">Especialidade (se médico)</option>
         <option value="clinico">Clínico Geral</option>

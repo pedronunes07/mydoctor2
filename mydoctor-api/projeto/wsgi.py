@@ -11,10 +11,7 @@ application = get_wsgi_application()
 app = application
 
 if os.environ.get('VERCEL') or os.environ.get('VERCEL_ENV'):
-    try:
-        from django.core.management import call_command
+    from django.core.management import call_command
 
-        call_command('migrate', '--noinput', verbosity=0)
-        call_command('create_admin', verbosity=0)
-    except Exception:
-        pass
+    call_command('migrate', '--noinput', verbosity=0)
+    call_command('create_admin', verbosity=0)

@@ -4,3 +4,4 @@ sqlparse>=0.5.0
 tzdata
 django-cors-headers>=4.3.0
 whitenoise>=6.6.0
+psycopg[binary]>=3.2.0

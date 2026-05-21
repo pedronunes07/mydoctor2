@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -75,6 +76,23 @@ DATABASES = {
     }
 }
 
+_database_url = os.environ.get('DATABASE_URL') or os.environ.get('POSTGRES_URL')
+if _database_url:
+    db = urlparse(_database_url)
+    if db.scheme in ('postgres', 'postgresql'):
+        query = parse_qs(db.query)
+        DATABASES['default'] = {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': db.path.lstrip('/'),
+            'USER': db.username or '',
+            'PASSWORD': db.password or '',
+            'HOST': db.hostname or '',
+            'PORT': db.port or '',
+            'OPTIONS': {
+                'sslmode': query.get('sslmode', ['require'])[0],
+            },
+        }
+
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -112,7 +130,8 @@ _ON_VERCEL = bool(os.environ.get('VERCEL') or os.environ.get('VERCEL_ENV'))
 
 if _ON_VERCEL:
     DEBUG = os.environ.get('DEBUG', 'False').lower() in ('1', 'true', 'yes')
-    DATABASES['default']['NAME'] = '/tmp/db.sqlite3'
+    if not _database_url:
+        DATABASES['default']['NAME'] = '/tmp/db.sqlite3'
     MEDIA_ROOT = '/tmp/media'
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
@@ -137,4 +156,4 @@ CORS_ALLOWED_ORIGINS = [
     origin.strip()
     for origin in os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',')
     if origin.strip()
-] 
+]
