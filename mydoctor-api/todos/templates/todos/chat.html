@@ -271,10 +271,11 @@
                 pc._pendingCandidates.push(s.content);
             } else if (s.type === 'decline') {
                 alert('Chamada recusada pelo outro participante.');
-                hangup();
+                cleanupCall();
             } else if (s.type === 'end') {
-                alert('A chamada foi encerrada.');
-                hangup();
+                if (!callEnded) {
+                    endCallSession({ notifyRemote: false, redirect: true, message: 'A outra parte encerrou a ligação.' });
+                }
             }
         }
     }
@@ -365,31 +366,23 @@
         });
     }
 
-    async function hangup() {
-        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-            await stopRecordingAndUpload();
-        }
+    let callEnded = false;
+
+    function resetCallButtons() {
         inCall = false;
         pendingRemoteOffer = null;
         if (incomingOffer) incomingOffer.style.display = 'none';
-        if (btnStartVideo) btnStartVideo.disabled = false;
-        if (btnStartAudio) btnStartAudio.disabled = false;
-        if (btnStart) btnStart.disabled = false;
+        if (btnStartVideo) btnStartVideo.disabled = !roomCode;
+        if (btnStartAudio) btnStartAudio.disabled = !roomCode;
+        if (btnStart) btnStart.disabled = !roomCode;
         if (btnHangup) btnHangup.disabled = true;
         if (btnMute) btnMute.disabled = true;
         if (btnVideo) btnVideo.disabled = true;
         if (btnRec) btnRec.disabled = true;
         if (btnStopRec) btnStopRec.disabled = true;
-        if (roomCode) {
-            try {
-                await fetch(`/api/chat/${roomCode}/close/`, {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: { 'X-CSRFToken': getCookie('csrftoken') },
-                });
-                await postSignal('end', { reason: 'hangup' });
-            } catch (e) { console.warn(e); }
-        }
+    }
+
+    function cleanupCall() {
         if (pc) {
             pc.getSenders().forEach(s => { try { s.track.stop(); } catch {} });
             pc.close();
@@ -399,9 +392,43 @@
             localStream.getTracks().forEach(t => t.stop());
             localStream = null;
         }
-        remoteVideo.srcObject = null;
-        localVideo.srcObject = null;
-        window.location.href = "{% url 'recorded_list' %}";
+        if (remoteVideo) remoteVideo.srcObject = null;
+        if (localVideo) localVideo.srcObject = null;
+        resetCallButtons();
+    }
+
+    async function endCallSession(opts = {}) {
+        const notifyRemote = opts.notifyRemote !== false;
+        const redirect = opts.redirect !== false;
+        if (callEnded) return;
+        callEnded = true;
+
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            await stopRecordingAndUpload();
+        }
+
+        if (notifyRemote && roomCode) {
+            try {
+                await postSignal('end', { reason: 'hangup' });
+                await fetch(`/api/chat/${roomCode}/close/`, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                });
+            } catch (e) { console.warn(e); }
+        }
+
+        cleanupCall();
+
+        if (opts.message) {
+            alert(opts.message);
+        }
+
+        if (redirect && EXIT_URL) {
+            window.location.href = EXIT_URL;
+        } else {
+            callEnded = false;
+        }
     }
 
     function toggleMute() {
@@ -418,16 +445,21 @@
         btnVideo.textContent = isVideoOff ? 'Vídeo ligar' : 'Vídeo on/off';
     }
 
-    const DASHBOARD_URL = "{% url 'dashboard' %}";
+    const EXIT_URL = "{{ voltar_url|default:'' }}";
 
     if (roomCode) {
         setInterval(handleSignals, 1200);
     }
     if (btnStart) {
-        btnStart.addEventListener('click', () => { window.location.href = DASHBOARD_URL; });
+        btnStart.addEventListener('click', () => {
+            if (EXIT_URL) window.location.href = EXIT_URL;
+        });
         btnStartVideo.addEventListener('click', () => startCall('video').catch(e => alert('Permita câmera/microfone: ' + e)));
         btnStartAudio.addEventListener('click', () => startCall('audio').catch(e => alert('Permita microfone: ' + e)));
-        btnHangup.addEventListener('click', hangup);
+        btnHangup.addEventListener('click', () => {
+            if (!confirm('Encerrar a ligação e voltar ao painel?')) return;
+            endCallSession({ notifyRemote: true, redirect: true });
+        });
         btnMute.addEventListener('click', toggleMute);
         btnVideo.addEventListener('click', toggleVideo);
     }

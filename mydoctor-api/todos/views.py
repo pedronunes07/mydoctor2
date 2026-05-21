@@ -500,8 +500,7 @@ def delete_recording_view(request, rec_id):
 @require_http_methods(["POST"])
 def close_chat_room_api(request, code):
     room = get_object_or_404(ChatRoom, code=code)
-    # Apenas o criador da sala (médico) pode encerrar
-    if room.created_by != request.user:
+    if not user_can_access_room(request.user, room):
         return HttpResponseBadRequest('sem permissão')
     if room.closed_at is None:
         room.closed_at = timezone.now()
