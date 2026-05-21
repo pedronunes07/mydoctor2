@@ -327,8 +327,39 @@ a:hover { color: var(--md-teal-light); text-decoration: none; }
   font-family: var(--md-font-display);
   font-size: 2rem;
   text-align: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.5rem;
   color: var(--md-navy);
+}
+
+.md-auth-hint {
+  text-align: center;
+  color: var(--md-muted);
+  font-size: 0.95rem;
+  margin: 0 0 1.5rem;
+}
+
+.md-auth-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--md-navy-soft);
+  margin-bottom: 0.35rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.md-auth-footer {
+  text-align: center;
+  margin: 1.5rem 0 0;
+  color: var(--md-muted);
+  font-size: 0.95rem;
+}
+
+.md-auth-form input:not([type="submit"]) {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: block;
+  box-sizing: border-box;
 }
 
 .md-auth-card input[type="text"],
