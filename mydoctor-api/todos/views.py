@@ -4,7 +4,12 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 from .models import Todo, Consulta, ChatRoom, ChatMessage, ChatSignal, Recording, Medico, Receita
-from .utils import user_has_medico
+from .utils import (
+    user_has_medico,
+    user_can_access_consulta,
+    user_can_access_room,
+    get_or_create_room_for_consulta,
+)
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse, reverse_lazy
 from django.db.models import Q
@@ -58,13 +63,10 @@ def logout_view(request):
 @login_required
 def dashboard_view(request):
     context = {'voltar_url': reverse('home')}
-    if request.user.is_authenticated:
-        # Salas disponíveis para o paciente (vinculadas às consultas dele)
-        try:
-            rooms = ChatRoom.objects.filter(consulta__usuario=request.user, closed_at__isnull=True).order_by('-created_at')
-        except Exception:
-            rooms = ChatRoom.objects.none()
-        context['chat_rooms_do_paciente'] = rooms
+    if user_can_access_patient_area(request.user):
+        context['consultas_recentes'] = Consulta.objects.filter(
+            usuario=request.user,
+        ).select_related('medico', 'medico__user').order_by('-data', '-hora')[:5]
     return render(request, 'todos/dashboard.html', context)
 
 def login_view(request):
@@ -138,7 +140,7 @@ def register_view(request):
 
 @login_required
 def ver_consultas_view(request):
-    consultas = Consulta.objects.filter(usuario=request.user).order_by('-data', '-hora')
+    consultas = Consulta.objects.filter(usuario=request.user).select_related('medico', 'medico__user').order_by('-data', '-hora')
     context = {
         'consultas': consultas,
         'voltar_url': reverse('home')
@@ -167,9 +169,22 @@ def agendar_consulta_view(request):
                 consulta.save(update_fields=['medico'])
         except Exception:
             pass
+        messages.success(request, 'Consulta agendada! Aguarde o médico assumir ou entre na ligação em Ver Consultas.')
         return redirect('ver_consultas')
     context = {'voltar_url': reverse('home')}
     return render(request, 'todos/agendar_consulta.html', context)
+
+
+@login_required
+def entrar_consulta_view(request, consulta_id):
+    consulta = get_object_or_404(Consulta, id=consulta_id)
+    if not user_can_access_consulta(request.user, consulta):
+        messages.error(request, 'Você não tem permissão para esta consulta.')
+        return redirect('dashboard')
+    room, created = get_or_create_room_for_consulta(consulta, request.user)
+    if created:
+        messages.info(request, 'Sala de atendimento criada. Aguarde o outro participante e inicie a ligação.')
+    return redirect('chat_room', code=room.code)
 
 
 # CHAT: criação e acesso à sala
@@ -179,23 +194,39 @@ def create_chat_room_view(request):
     if request.method == 'POST':
         if not user_has_medico(request.user):
             return redirect('dashboard')
-        code = get_random_string(10)
         consulta_id = request.POST.get('consulta_id')
         consulta = None
         if consulta_id:
-            try:
-                consulta = Consulta.objects.get(id=consulta_id)
-            except Consulta.DoesNotExist:
-                consulta = None
-        room = ChatRoom.objects.create(code=code, created_by=request.user, consulta=consulta)
+            consulta = get_object_or_404(Consulta, id=consulta_id)
+            if consulta.medico_id != request.user.medico.id:
+                messages.error(request, 'Esta consulta não está atribuída a você.')
+                return redirect('doctor_dashboard')
+        if consulta:
+            room, _ = get_or_create_room_for_consulta(consulta, request.user)
+        else:
+            room = ChatRoom.objects.create(
+                code=get_random_string(10),
+                created_by=request.user,
+            )
         return redirect('chat_room', code=room.code)
-    # GET exibe botão para criar sala
-    consultas = Consulta.objects.filter(medico=request.user.medico).order_by('-data', '-hora') if user_has_medico(request.user) else []
-    rooms_for_patient = ChatRoom.objects.filter(consulta__usuario=request.user, closed_at__isnull=True).order_by('-created_at') if not user_has_medico(request.user) else []
+    if user_has_medico(request.user):
+        consultas = Consulta.objects.filter(medico=request.user.medico).order_by('-data', '-hora')
+        voltar = reverse('doctor_dashboard')
+        consultas_paciente = []
+        salas_paciente = []
+    else:
+        consultas = []
+        voltar = reverse('dashboard')
+        consultas_paciente = Consulta.objects.filter(usuario=request.user).select_related('medico', 'medico__user').order_by('-data', '-hora')
+        salas_paciente = ChatRoom.objects.filter(
+            consulta__usuario=request.user,
+            closed_at__isnull=True,
+        ).select_related('consulta').order_by('-created_at')
     context = {
-        'voltar_url': reverse('doctor_dashboard'),
+        'voltar_url': voltar,
         'consultas_do_medico': consultas,
-        'chat_rooms_do_paciente': rooms_for_patient,
+        'consultas_paciente': consultas_paciente,
+        'chat_rooms_do_paciente': salas_paciente,
     }
     return render(request, 'todos/chat.html', context)
 
@@ -226,7 +257,8 @@ def doctor_accept_consulta_view(request, consulta_id):
     consulta = get_object_or_404(Consulta, id=consulta_id)
     consulta.medico = request.user.medico
     consulta.save(update_fields=['medico'])
-    messages.success(request, 'Consulta atribuída ao seu perfil.')
+    get_or_create_room_for_consulta(consulta, request.user)
+    messages.success(request, 'Consulta assumida. Sala de ligação pronta — clique em Entrar na ligação.')
     return redirect('doctor_dashboard')
 
 
@@ -270,6 +302,9 @@ def minhas_receitas_view(request):
 @login_required
 def chat_room_view(request, code):
     room = get_object_or_404(ChatRoom, code=code)
+    if not user_can_access_room(request.user, room):
+        messages.error(request, 'Você não tem acesso a esta sala.')
+        return redirect('dashboard')
     voltar = reverse('doctor_dashboard') if user_has_medico(request.user) else reverse('dashboard')
     context = {
         'room_code': room.code,
@@ -284,6 +319,8 @@ def chat_room_view(request, code):
 @require_http_methods(["GET", "POST"])
 def chat_messages_api(request, code):
     room = get_object_or_404(ChatRoom, code=code)
+    if not user_can_access_room(request.user, room):
+        return HttpResponseBadRequest('sem permissão')
     if request.method == 'GET':
         last_id = request.GET.get('last_id')
         qs = room.messages.all()
@@ -320,6 +357,8 @@ def chat_messages_api(request, code):
 @require_http_methods(["GET", "POST"])
 def chat_signals_api(request, code):
     room = get_object_or_404(ChatRoom, code=code)
+    if not user_can_access_room(request.user, room):
+        return HttpResponseBadRequest('sem permissão')
     if request.method == 'GET':
         last_id = request.GET.get('last_id')
         qs = room.signals.exclude(sender=request.user)
@@ -362,6 +401,8 @@ def chat_signals_api(request, code):
 @require_http_methods(["POST"])
 def upload_recording_api(request, code):
     room = get_object_or_404(ChatRoom, code=code)
+    if not user_can_access_room(request.user, room):
+        return HttpResponseBadRequest('sem permissão')
     f = request.FILES.get('file')
     duration = int(request.POST.get('duration', '0') or 0)
     if not f:

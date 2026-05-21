@@ -9,6 +9,7 @@ from .views import (
     doctor_dashboard_view,
     doctor_accept_consulta_view,
     agendar_consulta_view,
+    entrar_consulta_view,
     ver_consultas_view,
     create_chat_room_view,
     chat_room_view,
@@ -35,6 +36,7 @@ urlpatterns = [
     path('medico/consultas/<int:consulta_id>/assumir/', doctor_accept_consulta_view, name='doctor_accept_consulta'),
     path('agendar-consulta/', agendar_consulta_view, name='agendar_consulta'),
     path('ver-consultas/', ver_consultas_view, name='ver_consultas'),
+    path('consulta/<int:consulta_id>/entrar/', entrar_consulta_view, name='entrar_consulta'),
     # Chat
     path('chat/', create_chat_room_view, name='chat_create'),
     path('chat/<str:code>/', chat_room_view, name='chat_room'),

@@ -13,6 +13,7 @@
 {% include 'todos/_messages.html' %}
 <div class="container mt-4">
     <h2 class="mb-3">Painel do Médico</h2>
+    <p class="text-muted">Receba agendamentos da sua especialidade, assuma consultas e inicie a videochamada com o paciente.</p>
     <div class="row mb-4">
         <div class="col-md-4">
             <div class="card text-bg-light mb-3">
@@ -35,21 +36,21 @@
         </div>
     </div>
 
-    <h4>Consultas Pendentes</h4>
+    <h4>Consultas Pendentes (aguardando você)</h4>
     <div class="list-group mb-4">
         {% for c in pendentes %}
         <div class="list-group-item">
             <div class="d-flex w-100 justify-content-between">
-                <h5 class="mb-1">{{ c.especialidade }} - {{ c.usuario.username }}</h5>
-                <small>{{ c.data }} {{ c.hora }}</small>
+                <h5 class="mb-1">{{ c.label_especialidade }} — {{ c.usuario.get_full_name|default:c.usuario.username }}</h5>
+                <small>{{ c.data|date:'d/m/Y' }} {{ c.hora|time:'H:i' }}</small>
             </div>
-            <p class="mb-1">{{ c.observacoes }}</p>
+            <p class="mb-1">{{ c.observacoes|default:'Sem observações' }}</p>
             <div class="mt-2">
-                <a class="btn btn-success btn-sm" href="{% url 'doctor_accept_consulta' c.id %}">Assumir</a>
+                <a class="btn btn-success btn-sm" href="{% url 'doctor_accept_consulta' c.id %}">Assumir e preparar ligação</a>
             </div>
         </div>
         {% empty %}
-        <p>Nenhuma consulta pendente para sua especialidade.</p>
+        <p class="text-muted">Nenhuma consulta pendente para sua especialidade.</p>
         {% endfor %}
     </div>
 
@@ -58,25 +59,19 @@
         {% for c in consultas %}
         <div class="list-group-item">
             <div class="d-flex w-100 justify-content-between">
-                <h5 class="mb-1">{{ c.especialidade }} - {{ c.usuario.username }}</h5>
-                <small>{{ c.data }} {{ c.hora }}</small>
+                <h5 class="mb-1">{{ c.label_especialidade }} — {{ c.usuario.get_full_name|default:c.usuario.username }}</h5>
+                <small>{{ c.data|date:'d/m/Y' }} {{ c.hora|time:'H:i' }}</small>
             </div>
-            <p class="mb-1">{{ c.observacoes }}</p>
-            <div class="mt-2">
-                <form method="post" action="{% url 'chat_create' %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="consulta_id" value="{{ c.id }}">
-                    <button class="btn btn-primary btn-sm me-2" type="submit">Iniciar ligação</button>
-                </form>
-                <a class="btn btn-outline-secondary btn-sm me-2" href="{% url 'create_receita' c.id %}">Emitir receita/atestado</a>
-                <a class="btn btn-outline-dark btn-sm" href="{% url 'doctor_recordings' %}">Gravações</a>
+            <p class="mb-1">{{ c.observacoes|default:'Sem observações' }}</p>
+            <div class="mt-2 d-flex gap-2 flex-wrap">
+                <a class="btn btn-primary btn-sm" href="{% url 'entrar_consulta' c.id %}">Entrar na ligação</a>
+                <a class="btn btn-outline-secondary btn-sm" href="{% url 'create_receita' c.id %}">Emitir receita/atestado</a>
             </div>
         </div>
         {% empty %}
-        <p>Nenhuma consulta atribuída.</p>
+        <p class="text-muted">Nenhuma consulta atribuída a você ainda.</p>
         {% endfor %}
     </div>
 </div>
 </body>
 </html>
-

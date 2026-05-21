@@ -55,18 +55,18 @@
                             <button class="btn btn-primary">Criar sala</button>
                         </form>
                     {% else %}
-                        <div class="alert alert-info">Salas disponíveis para você entrar:</div>
-                        <ul class="list-group">
-                            {% for r in chat_rooms_do_paciente %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div class="alert alert-info">Suas consultas — entre na sala de videochamada:</div>
+                        <ul class="list-group mb-3">
+                            {% for c in consultas_paciente %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2">
                                     <span>
-                                        Sala {{ r.code }}
-                                        {% if r.consulta %} — {{ r.consulta.especialidade }} ({{ r.consulta.data }} {{ r.consulta.hora }}){% endif %}
+                                        {{ c.label_especialidade }} — {{ c.data|date:'d/m/Y' }} {{ c.hora|time:'H:i' }}
+                                        {% if c.medico %}<br><small>Médico: {{ c.medico.user.username }}</small>{% else %}<br><small class="text-warning">Aguardando médico</small>{% endif %}
                                     </span>
-                                    <a class="btn btn-primary" href="{% url 'chat_room' r.code %}">Entrar</a>
+                                    <a class="btn btn-success" href="{% url 'entrar_consulta' c.id %}">Entrar na ligação</a>
                                 </li>
                             {% empty %}
-                                <li class="list-group-item">Nenhuma sala disponível no momento.</li>
+                                <li class="list-group-item">Nenhuma consulta agendada. <a href="{% url 'agendar_consulta' %}">Agendar</a></li>
                             {% endfor %}
                         </ul>
                     {% endif %}
@@ -245,11 +245,15 @@
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
         await postSignal('offer', offer);
+        inCall = true;
+        btnRec.disabled = false;
     }
 
     let pendingRemoteOffer = null;
+    let inCall = false;
+
     async function handleSignals() {
-        if (!roomCode || !pc) return;
+        if (!roomCode) return;
         const url = new URL(window.location.origin + `/api/chat/${roomCode}/signals/`);
         if (lastSignalId) url.searchParams.set('last_id', lastSignalId);
         const r = await fetch(url);
@@ -258,16 +262,20 @@
         for (const s of data.signals) {
             lastSignalId = s.id;
             if (s.type === 'offer') {
-                // Se recebemos uma offer, viramos callee
+                if (inCall && pc) continue;
                 pendingRemoteOffer = s.content;
                 const sdp = (s.content && s.content.sdp) || '';
                 const wantsVideo = /\bm=video\b/.test(sdp);
                 incomingType.textContent = wantsVideo ? '(vídeo)' : '(áudio)';
-                if (incomingOffer) incomingOffer.style.display = '';
-            } else if (s.type === 'answer') {
+                if (incomingOffer) incomingOffer.style.display = 'block';
+            } else if (s.type === 'answer' && pc) {
                 await pc.setRemoteDescription(new RTCSessionDescription(s.content));
-            } else if (s.type === 'candidate') {
-                try { await pc.addIceCandidate(new RTCIceCandidate(s.content)); } catch {}
+                inCall = true;
+            } else if (s.type === 'candidate' && pc && pc.remoteDescription) {
+                try { await pc.addIceCandidate(new RTCIceCandidate(s.content)); } catch (e) { console.warn(e); }
+            } else if (s.type === 'candidate' && pc) {
+                if (!pc._pendingCandidates) pc._pendingCandidates = [];
+                pc._pendingCandidates.push(s.content);
             } else if (s.type === 'decline') {
                 alert('Chamada recusada pelo outro participante.');
                 hangup();
@@ -276,6 +284,14 @@
                 hangup();
             }
         }
+    }
+
+    async function flushPendingCandidates() {
+        if (!pc || !pc._pendingCandidates) return;
+        for (const c of pc._pendingCandidates) {
+            try { await pc.addIceCandidate(new RTCIceCandidate(c)); } catch (e) { console.warn(e); }
+        }
+        pc._pendingCandidates = [];
     }
 
     async function ensurePc(mode = 'video') {
@@ -302,6 +318,11 @@
     }
 
     async function hangup() {
+        inCall = false;
+        pendingRemoteOffer = null;
+        if (incomingOffer) incomingOffer.style.display = 'none';
+        btnStartVideo.disabled = false;
+        btnStartAudio.disabled = false;
         btnStart.disabled = false;
         btnHangup.disabled = true;
         btnMute.disabled = true;
@@ -346,24 +367,34 @@
 
     const DASHBOARD_URL = "{% url 'dashboard' %}";
 
+    if (roomCode) {
+        setInterval(handleSignals, 1200);
+    }
     if (btnStart) {
         btnStart.addEventListener('click', () => { window.location.href = DASHBOARD_URL; });
-        btnStartVideo.addEventListener('click', () => startCall('video'));
-        btnStartAudio.addEventListener('click', () => startCall('audio'));
+        btnStartVideo.addEventListener('click', () => startCall('video').catch(e => alert('Permita câmera/microfone: ' + e)));
+        btnStartAudio.addEventListener('click', () => startCall('audio').catch(e => alert('Permita microfone: ' + e)));
         btnHangup.addEventListener('click', hangup);
         btnMute.addEventListener('click', toggleMute);
         btnVideo.addEventListener('click', toggleVideo);
-        setInterval(handleSignals, 1200);
     }
 
     async function acceptIncoming(mode) {
         if (!pendingRemoteOffer) return;
+        btnStartVideo.disabled = true;
+        btnStartAudio.disabled = true;
+        btnHangup.disabled = false;
+        btnMute.disabled = false;
+        btnVideo.disabled = (mode === 'audio');
         if (!pc) await ensurePc(mode);
         await pc.setRemoteDescription(new RTCSessionDescription(pendingRemoteOffer));
+        await flushPendingCandidates();
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
         await postSignal('answer', answer);
         pendingRemoteOffer = null;
+        inCall = true;
+        btnRec.disabled = false;
         if (incomingOffer) incomingOffer.style.display = 'none';
     }
 

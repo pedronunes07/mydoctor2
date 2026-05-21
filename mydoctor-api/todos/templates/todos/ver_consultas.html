@@ -14,25 +14,42 @@
 {% include 'todos/_messages.html' %}
 <div class="dashboard-container">
     <h2>Minhas Consultas</h2>
+    <p class="text-muted">Agende, acompanhe o médico e entre na videochamada quando a consulta estiver confirmada.</p>
+    <div class="mb-3">
+        <a href="{% url 'agendar_consulta' %}" class="btn btn-primary">+ Nova consulta</a>
+    </div>
     {% if consultas %}
-        <div class="dashboard-grid">
+        <div class="list-group">
             {% for consulta in consultas %}
-                <div class="dashboard-btn" style="flex-direction:column;align-items:flex-start;text-align:left;min-height:120px;">
-                    <strong>Especialidade:</strong> {{ consulta.especialidade }}<br>
-                    <strong>Data:</strong> {{ consulta.data|date:'d/m/Y' }}<br>
-                    <strong>Hora:</strong> {{ consulta.hora|time:'H:i' }}<br>
-                    {% if consulta.observacoes %}
-                        <strong>Obs:</strong> {{ consulta.observacoes }}<br>
+            <div class="list-group-item">
+                <div class="d-flex w-100 justify-content-between flex-wrap gap-2">
+                    <h5 class="mb-1">{{ consulta.label_especialidade }}</h5>
+                    <small>{{ consulta.data|date:'d/m/Y' }} às {{ consulta.hora|time:'H:i' }}</small>
+                </div>
+                {% if consulta.medico %}
+                    <p class="mb-1 text-success">Médico: Dr(a). {{ consulta.medico.user.get_full_name|default:consulta.medico.user.username }}</p>
+                {% else %}
+                    <p class="mb-1 text-warning">Aguardando médico assumir a consulta</p>
+                {% endif %}
+                {% if consulta.observacoes %}
+                    <p class="mb-2"><small>{{ consulta.observacoes }}</small></p>
+                {% endif %}
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{% url 'entrar_consulta' consulta.id %}" class="btn btn-success btn-sm">Entrar na ligação</a>
+                    {% if consulta.sala_chat_aberta %}
+                        <span class="badge bg-info align-self-center">Sala aberta</span>
                     {% endif %}
                 </div>
+            </div>
             {% endfor %}
         </div>
     {% else %}
         <p>Você ainda não possui consultas agendadas.</p>
+        <a href="{% url 'agendar_consulta' %}" class="btn btn-primary">Agendar primeira consulta</a>
     {% endif %}
     <div style="margin-top: 20px;">
         <a href="{% url 'dashboard' %}" class="btn btn-secondary">Voltar</a>
     </div>
 </div>
 </body>
-</html> 
+</html>
