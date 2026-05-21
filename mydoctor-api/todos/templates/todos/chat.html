@@ -205,6 +205,8 @@
     const btnHangup = document.getElementById('btnHangup');
     const btnMute = document.getElementById('btnMute');
     const btnVideo = document.getElementById('btnVideo');
+    const btnRec = document.getElementById('btnRec');
+    const btnStopRec = document.getElementById('btnStopRec');
     const localVideo = document.getElementById('localVideo');
     const remoteVideo = document.getElementById('remoteVideo');
 
@@ -246,7 +248,7 @@
         await pc.setLocalDescription(offer);
         await postSignal('offer', offer);
         inCall = true;
-        btnRec.disabled = false;
+        if (btnRec) btnRec.disabled = false;
     }
 
     let pendingRemoteOffer = null;
@@ -327,8 +329,8 @@
         btnHangup.disabled = true;
         btnMute.disabled = true;
         btnVideo.disabled = true;
-        btnRec.disabled = true;
-        btnStopRec.disabled = true;
+        if (btnRec) btnRec.disabled = true;
+        if (btnStopRec) btnStopRec.disabled = true;
         // tenta encerrar a sala no backend (se usuário for criador)
         if (roomCode) {
             try {
@@ -394,7 +396,7 @@
         await postSignal('answer', answer);
         pendingRemoteOffer = null;
         inCall = true;
-        btnRec.disabled = false;
+        if (btnRec) btnRec.disabled = false;
         if (incomingOffer) incomingOffer.style.display = 'none';
     }
 
@@ -432,15 +434,15 @@
             if (!r.ok) alert('Falha ao enviar gravação');
         };
         mediaRecorder.start(1000);
-        btnRec.disabled = true;
-        btnStopRec.disabled = false;
+        if (btnRec) btnRec.disabled = true;
+        if (btnStopRec) btnStopRec.disabled = false;
     }
     function stopRecording() {
         if (mediaRecorder && mediaRecorder.state !== 'inactive') {
             mediaRecorder.stop();
         }
-        btnRec.disabled = false;
-        btnStopRec.disabled = true;
+        if (btnRec) btnRec.disabled = false;
+        if (btnStopRec) btnStopRec.disabled = true;
     }
 
     if (btnRec) {

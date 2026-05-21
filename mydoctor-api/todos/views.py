@@ -6,6 +6,7 @@ from django.contrib import messages
 from .models import Todo, Consulta, ChatRoom, ChatMessage, ChatSignal, Recording, Medico, Receita
 from .utils import (
     user_has_medico,
+    user_can_access_patient_area,
     user_can_access_consulta,
     user_can_access_room,
     get_or_create_room_for_consulta,

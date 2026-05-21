@@ -19,14 +19,16 @@ class Consulta(models.Model):
 	def __str__(self):
 		return f"{self.especialidade} em {self.data} às {self.hora} ({self.usuario.username})"
 
+	@property
 	def label_especialidade(self):
 		return dict(Medico.ESPECIALIDADES).get(self.especialidade, self.especialidade)
 
+	@property
 	def sala_chat_aberta(self):
 		return self.salas.filter(closed_at__isnull=True).first()
 
 	def status_agendamento(self):
-		if self.sala_chat_aberta():
+		if self.sala_chat_aberta:
 			return 'sala_aberta'
 		if self.medico_id:
 			return 'confirmada'
