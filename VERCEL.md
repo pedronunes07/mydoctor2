@@ -32,6 +32,20 @@ O `mydoctor-api/vercel.json` já define install, build, WSGI e rotas — **não*
 |----------|--------|
 | `SECRET_KEY` | chave longa aleatória |
 | `DEBUG` | `False` |
+| `ADMIN_USERNAME` | `admin` (opcional) |
+| `ADMIN_EMAIL` | `admin@mydoctor.local` (opcional) |
+| `ADMIN_PASSWORD` | senha forte da sua escolha (recomendado em produção) |
+
+## Conta admin de teste
+
+Após o deploy, o comando `create_admin` roda automaticamente. **Padrão** (se não definir variáveis):
+
+| Campo | Valor |
+|-------|--------|
+| Usuário | `admin` |
+| E-mail (login do site) | `admin@mydoctor.local` |
+| Senha | `Admin@MyDoctor2026` |
+| Painel Django | `/admin/` |
 
 ## Redeploy correto
 

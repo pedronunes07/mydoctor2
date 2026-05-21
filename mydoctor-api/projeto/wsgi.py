@@ -15,5 +15,6 @@ if os.environ.get('VERCEL') or os.environ.get('VERCEL_ENV'):
         from django.core.management import call_command
 
         call_command('migrate', '--noinput', verbosity=0)
+        call_command('create_admin', verbosity=0)
     except Exception:
         pass
