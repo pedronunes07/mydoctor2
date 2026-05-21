@@ -95,6 +95,16 @@ class NumericInputTests(TestCase):
         self.assertContains(response, f'href="{reverse("chat_create")}"')
         self.assertContains(response, f'href="{reverse("recorded_list")}"')
 
+    def test_chat_back_link_only_intercepts_when_recording_needs_save(self):
+        user = User.objects.create_user(username='paciente-chat', password='SenhaForte123')
+        room = ChatRoom.objects.create(code='chat123', created_by=user)
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('chat_room', args=[room.code]))
+
+        self.assertContains(response, 'if (!shouldSaveRecordingBeforeLeave())')
+        self.assertContains(response, 'href="/dashboard/"')
+
     def test_session_snapshot_restores_user_if_sqlite_resets(self):
         user = User.objects.create_user(
             username='paciente',
