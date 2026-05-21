@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from .models import ChatRoom, Medico, Recording
+from .utils import get_panel_url
 from .views import get_medico_by_numeric_crm, only_digits
 
 
@@ -59,6 +60,16 @@ class NumericInputTests(TestCase):
 
         self.assertContains(response, f'href="{reverse("dashboard")}"')
         self.assertContains(response, 'Voltar')
+
+    def test_superuser_with_medico_returns_to_services_dashboard(self):
+        user = User.objects.create_superuser(
+            username='admin',
+            email='admin@example.com',
+            password='SenhaForte123',
+        )
+        Medico.objects.create(user=user, crm='9999', especialidade='clinico')
+
+        self.assertEqual(get_panel_url(user), reverse('dashboard'))
 
     def test_recording_upload_saves_media(self):
         user = User.objects.create_user(username='paciente', password='SenhaForte123')
