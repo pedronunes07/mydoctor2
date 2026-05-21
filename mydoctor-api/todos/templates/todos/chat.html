@@ -79,6 +79,9 @@
                 <div class="card">
                     <div class="card-header">Voz e Vídeo</div>
                     <div class="card-body">
+                        {% if room_code %}
+                        <p class="small text-muted mb-2">1) Inicie vídeo/áudio → 2) Clique <strong>Gravar</strong> → 3) <strong>Parar gravação</strong> para salvar (ou encerre a chamada).</p>
+                        {% endif %}
                         <div id="incomingOffer" class="alert alert-info" style="display:none;">
                             <div class="d-flex justify-content-between align-items-center" style="gap:8px; flex-wrap:wrap;">
                                 <div>
@@ -319,24 +322,85 @@
         });
     }
 
+    let recordingStartedAt = null;
+    let uploadInProgress = false;
+
+    function buildRecordingStream() {
+        const mix = new MediaStream();
+        const addTracks = (stream) => {
+            if (!stream) return;
+            stream.getTracks().forEach(t => mix.addTrack(t));
+        };
+        addTracks(localStream);
+        addTracks(remoteVideo.srcObject);
+        return mix.getTracks().length ? mix : null;
+    }
+
+    async function uploadRecordingBlob() {
+        if (!recordedChunks.length) return false;
+        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+        if (!blob.size) return false;
+        const secs = recordingStartedAt ? Math.round((Date.now() - recordingStartedAt) / 1000) : 0;
+        const form = new FormData();
+        form.append('file', blob, `gravacao_${Date.now()}.webm`);
+        form.append('duration', String(secs));
+        const r = await fetch(`/api/chat/${roomCode}/upload-recording/`, {
+            method: 'POST',
+            body: form,
+            credentials: 'same-origin',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        });
+        let data = {};
+        try { data = await r.json(); } catch (e) {}
+        if (!r.ok || !data.ok) {
+            alert('Falha ao salvar gravação: ' + (data.error || r.status));
+            return false;
+        }
+        alert('Gravação salva! Veja em Consultas Gravadas.');
+        return true;
+    }
+
+    function stopRecordingAndUpload() {
+        return new Promise((resolve) => {
+            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+                resolve(uploadRecordingBlob());
+                return;
+            }
+            mediaRecorder.onstop = async () => {
+                uploadInProgress = true;
+                await uploadRecordingBlob();
+                uploadInProgress = false;
+                recordedChunks = [];
+                resolve(true);
+            };
+            mediaRecorder.stop();
+        });
+    }
+
     async function hangup() {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            await stopRecordingAndUpload();
+        }
         inCall = false;
         pendingRemoteOffer = null;
         if (incomingOffer) incomingOffer.style.display = 'none';
-        btnStartVideo.disabled = false;
-        btnStartAudio.disabled = false;
-        btnStart.disabled = false;
-        btnHangup.disabled = true;
-        btnMute.disabled = true;
-        btnVideo.disabled = true;
+        if (btnStartVideo) btnStartVideo.disabled = false;
+        if (btnStartAudio) btnStartAudio.disabled = false;
+        if (btnStart) btnStart.disabled = false;
+        if (btnHangup) btnHangup.disabled = true;
+        if (btnMute) btnMute.disabled = true;
+        if (btnVideo) btnVideo.disabled = true;
         if (btnRec) btnRec.disabled = true;
         if (btnStopRec) btnStopRec.disabled = true;
-        // tenta encerrar a sala no backend (se usuário for criador)
         if (roomCode) {
             try {
-                await fetch(`/api/chat/${roomCode}/close/`, { method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') } });
+                await fetch(`/api/chat/${roomCode}/close/`, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                });
                 await postSignal('end', { reason: 'hangup' });
-            } catch {}
+            } catch (e) { console.warn(e); }
         }
         if (pc) {
             pc.getSenders().forEach(s => { try { s.track.stop(); } catch {} });
@@ -349,8 +413,7 @@
         }
         remoteVideo.srcObject = null;
         localVideo.srcObject = null;
-        // voltar para lista de salas
-        window.location.href = "{% url 'chat_create' %}";
+        window.location.href = "{% url 'recorded_list' %}";
     }
 
     function toggleMute() {
@@ -409,53 +472,45 @@
     });
 
     // ====== Gravação ======
-    function enableRecordingButtons() {
-        btnRec.disabled = false;
-    }
     function startRecording() {
-        if (!localStream && !remoteVideo.srcObject) return;
-        const mixStream = new MediaStream();
-        // Preferir remoto; se não houver, usa local
-        const baseStream = remoteVideo.srcObject || localStream;
-        baseStream.getTracks().forEach(t => mixStream.addTrack(t));
+        const mixStream = buildRecordingStream();
+        if (!mixStream) {
+            alert('Inicie a ligação antes de gravar (vídeo ou áudio).');
+            return;
+        }
+        const options = MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')
+            ? { mimeType: 'video/webm;codecs=vp8,opus' }
+            : (MediaRecorder.isTypeSupported('video/webm') ? { mimeType: 'video/webm' } : {});
         try {
-            mediaRecorder = new MediaRecorder(mixStream, { mimeType: 'video/webm;codecs=vp8,opus' });
+            mediaRecorder = new MediaRecorder(mixStream, options);
         } catch (e) {
-            mediaRecorder = new MediaRecorder(mixStream);
+            alert('Seu navegador não suporta gravação: ' + e);
+            return;
         }
         recordedChunks = [];
+        recordingStartedAt = Date.now();
         mediaRecorder.ondataavailable = e => { if (e.data && e.data.size) recordedChunks.push(e.data); };
         mediaRecorder.onstop = async () => {
-            const blob = new Blob(recordedChunks, { type: 'video/webm' });
-            const form = new FormData();
-            form.append('file', blob, `gravacao_${Date.now()}.webm`);
-            form.append('duration', '0');
-            const r = await fetch(`/api/chat/${roomCode}/upload-recording/`, { method: 'POST', body: form, headers: { 'X-CSRFToken': getCookie('csrftoken') } });
-            if (!r.ok) alert('Falha ao enviar gravação');
+            if (uploadInProgress) return;
+            uploadInProgress = true;
+            await uploadRecordingBlob();
+            uploadInProgress = false;
+            if (btnRec) btnRec.disabled = false;
+            if (btnStopRec) btnStopRec.disabled = true;
         };
         mediaRecorder.start(1000);
         if (btnRec) btnRec.disabled = true;
         if (btnStopRec) btnStopRec.disabled = false;
     }
+
     function stopRecording() {
         if (mediaRecorder && mediaRecorder.state !== 'inactive') {
             mediaRecorder.stop();
         }
-        if (btnRec) btnRec.disabled = false;
-        if (btnStopRec) btnStopRec.disabled = true;
     }
 
-    if (btnRec) {
-        btnRec.addEventListener('click', startRecording);
-        btnStopRec.addEventListener('click', stopRecording);
-    }
-
-    // Iniciar automaticamente a chamada e a gravação quando houver sala
-    (function initIfRoom(){
-        if (!roomCode) return;
-        // Habilitar gravação somente após iniciar a chamada
-        enableRecordingButtons();
-    })();
+    if (btnRec) btnRec.addEventListener('click', startRecording);
+    if (btnStopRec) btnStopRec.addEventListener('click', stopRecording);
     </script>
 </body>
 </html>

@@ -79,12 +79,17 @@ class Recording(models.Model):
 	"""Gravação de uma consulta (áudio/vídeo) vinculada a uma sala."""
 	room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='recordings')
 	uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
-	file = models.FileField(upload_to='recordings/')
+	file = models.FileField(upload_to='recordings/', blank=True, null=True)
+	file_blob = models.BinaryField(blank=True, null=True)
+	mime_type = models.CharField(max_length=64, default='video/webm')
 	duration_seconds = models.PositiveIntegerField(default=0)
 	created_at = models.DateTimeField(auto_now_add=True)
 
 	def __str__(self):
 		return f"Gravação {self.id} - sala {self.room.code}"
+
+	def has_media(self):
+		return bool(self.file_blob) or bool(self.file)
 
 
 class Medico(models.Model):

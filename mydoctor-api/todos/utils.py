@@ -43,6 +43,18 @@ def user_can_access_room(user, room):
     return False
 
 
+def user_can_access_recording(user, recording):
+    if not user.is_authenticated:
+        return False
+    if recording.uploaded_by_id == user.id:
+        return True
+    if recording.room.consulta_id and user_can_access_consulta(user, recording.room.consulta):
+        return True
+    if user.is_superuser:
+        return True
+    return False
+
+
 def get_or_create_room_for_consulta(consulta, created_by):
     room = ChatRoom.objects.filter(consulta=consulta, closed_at__isnull=True).first()
     if room:

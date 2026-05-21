@@ -6,43 +6,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consultas Gravadas</title>
     <link rel="stylesheet" href="{% static 'bootstrap.min.css' %}">
-    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link href="{% static 'style.css' %}" rel="stylesheet">
 </head>
 <body>
 {% include 'todos/_navbar.html' with voltar_url=voltar_url %}
 {% include 'todos/_messages.html' %}
 
-<div class="dashboard-container">
+<div class="container mt-4">
     <h2>Consultas Gravadas</h2>
-    <div class="dashboard-grid">
-        {% if recordings %}
+    <p class="text-muted">Gravações das videochamadas. Após cada ligação, use <strong>Gravar</strong> e depois <strong>Parar gravação</strong> na sala.</p>
+    {% if recordings %}
+        <div class="row g-3">
             {% for r in recordings %}
-                <div class="dashboard-card" style="padding:16px; background:#fff; border-radius:10px; box-shadow:0 6px 18px rgba(0,0,0,0.06);">
+            <div class="col-md-6">
+                <div class="card p-3">
                     <div><strong>Sala:</strong> {{ r.room.code }}</div>
+                    {% if r.room.consulta %}
+                    <div><strong>Consulta:</strong> {{ r.room.consulta.label_especialidade }} — {{ r.room.consulta.data|date:'d/m/Y' }}</div>
+                    {% endif %}
                     <div><strong>Enviado por:</strong> {{ r.uploaded_by.username }}</div>
                     <div><strong>Duração:</strong> {{ r.duration_seconds }}s</div>
                     <div><strong>Data:</strong> {{ r.created_at|date:'d/m/Y H:i' }}</div>
+                    {% if r.has_media %}
                     <div class="mt-2">
-                        <video controls style="width:100%; max-height:300px; border-radius:8px;">
-                            <source src="{{ r.file.url }}">
+                        <video controls style="width:100%; max-height:280px; border-radius:8px; background:#000;">
+                            <source src="{% url 'recording_playback' r.id %}" type="{{ r.mime_type|default:'video/webm' }}">
                         </video>
                     </div>
                     <div class="mt-2 d-flex gap-2">
-                        <a class="btn btn-sm btn-outline-primary" href="{{ r.file.url }}" download>Baixar</a>
+                        <a class="btn btn-sm btn-outline-primary" href="{% url 'recording_playback' r.id %}" download>Baixar</a>
                         <form method="post" action="{% url 'delete_recording' r.id %}" onsubmit="return confirm('Excluir esta gravação?');">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-sm btn-outline-danger">Excluir</button>
                         </form>
                     </div>
+                    {% else %}
+                    <p class="text-warning mt-2 mb-0">Arquivo indisponível (pode ter sido perdido após reinício do servidor).</p>
+                    {% endif %}
                 </div>
+            </div>
             {% endfor %}
-        {% else %}
-            <div class="alert alert-info">Nenhuma consulta gravada encontrada.</div>
-        {% endif %}
-    </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info">Nenhuma gravação salva ainda. Entre numa consulta, inicie a ligação, clique em <strong>Gravar</strong> e depois <strong>Parar gravação</strong>.</div>
+    {% endif %}
 </div>
-
 </body>
 </html>
-
-

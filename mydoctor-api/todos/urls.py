@@ -16,6 +16,7 @@ from .views import (
     chat_messages_api,
     chat_signals_api,
     upload_recording_api,
+    recording_playback_view,
     recorded_list_view,
     delete_recording_view,
     create_receita_view,
@@ -45,6 +46,7 @@ urlpatterns = [
     path('api/chat/<str:code>/upload-recording/', upload_recording_api, name='upload_recording_api'),
     path('api/chat/<str:code>/close/', close_chat_room_api, name='close_chat_room_api'),
     path('consultas-gravadas/', recorded_list_view, name='recorded_list'),
+    path('gravacao/<int:rec_id>/', recording_playback_view, name='recording_playback'),
     path('consultas-gravadas/<int:rec_id>/excluir/', delete_recording_view, name='delete_recording'),
     path('medico/gravacoes/', doctor_recordings_view, name='doctor_recordings'),
     # Receitas

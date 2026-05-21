@@ -10,11 +10,15 @@ from .utils import (
     user_can_access_consulta,
     user_can_access_room,
     get_or_create_room_for_consulta,
+    user_can_access_recording,
 )
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse, reverse_lazy
 from django.db.models import Q
-from django.http import JsonResponse, HttpResponseBadRequest
+import os
+
+from django.core.files.base import ContentFile
+from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse, Http404
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 from django.utils.crypto import get_random_string
@@ -403,13 +407,58 @@ def chat_signals_api(request, code):
 def upload_recording_api(request, code):
     room = get_object_or_404(ChatRoom, code=code)
     if not user_can_access_room(request.user, room):
-        return HttpResponseBadRequest('sem permissão')
+        return JsonResponse({'ok': False, 'error': 'sem permissão'}, status=403)
     f = request.FILES.get('file')
-    duration = int(request.POST.get('duration', '0') or 0)
+    try:
+        duration = int(request.POST.get('duration', '0') or 0)
+    except ValueError:
+        duration = 0
     if not f:
-        return HttpResponseBadRequest('Arquivo ausente')
-    rec = Recording.objects.create(room=room, uploaded_by=request.user, file=f, duration_seconds=duration)
-    return JsonResponse({'ok': True, 'id': rec.id, 'url': rec.file.url})
+        return JsonResponse({'ok': False, 'error': 'Arquivo ausente'}, status=400)
+    if f.size > 45 * 1024 * 1024:
+        return JsonResponse({'ok': False, 'error': 'Arquivo muito grande (máx. 45 MB)'}, status=400)
+
+    mime = f.content_type or 'video/webm'
+    raw = f.read()
+    if not raw:
+        return JsonResponse({'ok': False, 'error': 'Arquivo vazio'}, status=400)
+
+    rec = Recording(
+        room=room,
+        uploaded_by=request.user,
+        duration_seconds=duration,
+        mime_type=mime,
+    )
+    on_vercel = bool(os.environ.get('VERCEL') or os.environ.get('VERCEL_ENV'))
+    if on_vercel:
+        rec.file_blob = raw
+        rec.save()
+    else:
+        rec.save()
+        rec.file.save(f.name or f'gravacao_{rec.pk}.webm', ContentFile(raw), save=True)
+
+    return JsonResponse({
+        'ok': True,
+        'id': rec.id,
+        'playback_url': reverse('recording_playback', args=[rec.id]),
+        'list_url': reverse('recorded_list'),
+    })
+
+
+@login_required
+def recording_playback_view(request, rec_id):
+    rec = get_object_or_404(Recording, id=rec_id)
+    if not user_can_access_recording(request.user, rec):
+        raise Http404()
+    if rec.file_blob:
+        return HttpResponse(rec.file_blob, content_type=rec.mime_type or 'video/webm')
+    if rec.file:
+        try:
+            with rec.file.open('rb') as fh:
+                return HttpResponse(fh.read(), content_type=rec.mime_type or 'video/webm')
+        except FileNotFoundError:
+            raise Http404()
+    raise Http404()
 
 
 # Lista de gravações
@@ -439,7 +488,8 @@ def doctor_recordings_view(request):
 def delete_recording_view(request, rec_id):
     rec = get_object_or_404(Recording, id=rec_id)
     if request.user == rec.uploaded_by or request.user.is_superuser:
-        rec.file.delete(save=False)
+        if rec.file:
+            rec.file.delete(save=False)
         rec.delete()
         messages.success(request, 'Gravação excluída com sucesso.')
     else:
