@@ -1,53 +1,47 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro</title>
-    <link rel="stylesheet" href="{% static 'style_register.css' %}">
-    <link href="{% static 'bootstrap.min.css' %}" rel="stylesheet">
-    <link href="{% static 'style.css' %}" rel="stylesheet">
-</head>
+{% include 'todos/_head.html' with page_title='Cadastro' %}
 <body>
 {% include 'todos/_navbar.html' with voltar_url=voltar_url %}
-<div class="form-container">
+{% include 'todos/_messages.html' %}
+
+<div class="md-auth-page">
+  <div class="md-auth-card" style="max-width:480px;">
+    <h2>Criar conta</h2>
     <form method="post">
-        {% csrf_token %}
-        <h3>CADASTRO</h3>
-        {% if messages %}
-            {% for message in messages %}
-                <span class="error-msg">{{ message }}</span>
-            {% endfor %}
-        {% endif %}
-        <input type="text" name="full_name" required placeholder="Nome completo">
-        <input type="text" name="phone" required placeholder="Telefone">
-        <input type="text" name="username" required placeholder="Nome de usuário">
-        <input type="date" name="birthdate" required placeholder="Data de nascimento" title="Data de nascimento">
-        <input type="email" name="email" required placeholder="E-mail">
-        <div class="form-check mt-2">
-            <input class="form-check-input" type="checkbox" id="is_medico" name="is_medico">
-            <label class="form-check-label" for="is_medico">Sou médico</label>
-        </div>
-        <input type="text" name="crm" placeholder="CRM (obrigatório se for médico)">
-        <select name="especialidade" class="form-select mt-2">
-            <option value="">Selecione a especialidade (se médico)</option>
-            <option value="clinico">Clínico Geral</option>
-            <option value="pediatria">Pediatria</option>
-            <option value="ginecologia">Ginecologia</option>
-            <option value="cardiologia">Cardiologia</option>
-            <option value="dermatologia">Dermatologia</option>
-            <option value="ortopedia">Ortopedia</option>
-            <option value="otorrino">Otorrinolaringologia</option>
-            <option value="oftalmo">Oftalmologia</option>
-            <option value="neuro">Neurologia</option>
-            <option value="psiquiatria">Psiquiatria</option>
-        </select>
-        <input type="password" name="password" required placeholder="Senha">
-        <input type="password" name="password2" required placeholder="Confirme a senha">
-        <input type="submit" value="Cadastrar" class="form-btn">
-        <p>Já tem uma conta? <a href="{% url 'login' %}">Entrar</a></p>
+      {% csrf_token %}
+      <input type="text" name="full_name" required placeholder="Nome completo">
+      <input type="text" name="phone" required placeholder="Telefone">
+      <input type="text" name="username" required placeholder="Nome de usuário">
+      <input type="date" name="birthdate" required title="Data de nascimento">
+      <input type="email" name="email" required placeholder="E-mail">
+      <div class="form-check my-2 text-left">
+        <input class="form-check-input" type="checkbox" id="is_medico" name="is_medico">
+        <label class="form-check-label" for="is_medico">Sou médico</label>
+      </div>
+      <input type="text" name="crm" placeholder="CRM (se médico)">
+      <select name="especialidade" class="w-100" style="padding:0.85rem 1rem;border-radius:10px;border:1px solid var(--md-border);margin-bottom:0.75rem;">
+        <option value="">Especialidade (se médico)</option>
+        <option value="clinico">Clínico Geral</option>
+        <option value="pediatria">Pediatria</option>
+        <option value="ginecologia">Ginecologia</option>
+        <option value="cardiologia">Cardiologia</option>
+        <option value="dermatologia">Dermatologia</option>
+        <option value="ortopedia">Ortopedia</option>
+        <option value="otorrino">Otorrinolaringologia</option>
+        <option value="oftalmo">Oftalmologia</option>
+        <option value="neuro">Neurologia</option>
+        <option value="psiquiatria">Psiquiatria</option>
+      </select>
+      <input type="password" name="password" required placeholder="Senha">
+      <input type="password" name="password2" required placeholder="Confirme a senha">
+      <input type="submit" value="Cadastrar" class="form-btn">
     </form>
+    <p class="text-center mt-3 mb-0">Já tem conta? <a href="{% url 'login' %}"><strong>Entrar</strong></a></p>
+  </div>
 </div>
+
+{% include 'todos/_footer.html' %}
 </body>
-</html> 
+</html>

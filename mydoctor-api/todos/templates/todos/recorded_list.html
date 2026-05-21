@@ -1,55 +1,50 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consultas Gravadas</title>
-    <link rel="stylesheet" href="{% static 'bootstrap.min.css' %}">
-    <link href="{% static 'style.css' %}" rel="stylesheet">
-</head>
+{% include 'todos/_head.html' with page_title='Gravações' %}
 <body>
 {% include 'todos/_navbar.html' with voltar_url=voltar_url %}
 {% include 'todos/_messages.html' %}
 
-<div class="container mt-4">
-    <h2>Consultas Gravadas</h2>
-    <p class="text-muted">Gravações das videochamadas. Após cada ligação, use <strong>Gravar</strong> e depois <strong>Parar gravação</strong> na sala.</p>
-    {% if recordings %}
-        <div class="row g-3">
-            {% for r in recordings %}
-            <div class="col-md-6">
-                <div class="card p-3">
-                    <div><strong>Sala:</strong> {{ r.room.code }}</div>
-                    {% if r.room.consulta %}
-                    <div><strong>Consulta:</strong> {{ r.room.consulta.label_especialidade }} — {{ r.room.consulta.data|date:'d/m/Y' }}</div>
-                    {% endif %}
-                    <div><strong>Enviado por:</strong> {{ r.uploaded_by.username }}</div>
-                    <div><strong>Duração:</strong> {{ r.duration_seconds }}s</div>
-                    <div><strong>Data:</strong> {{ r.created_at|date:'d/m/Y H:i' }}</div>
-                    {% if r.has_media %}
-                    <div class="mt-2">
-                        <video controls style="width:100%; max-height:280px; border-radius:8px; background:#000;">
-                            <source src="{% url 'recording_playback' r.id %}" type="{{ r.mime_type|default:'video/webm' }}">
-                        </video>
-                    </div>
-                    <div class="mt-2 d-flex gap-2">
-                        <a class="btn btn-sm btn-outline-primary" href="{% url 'recording_playback' r.id %}" download>Baixar</a>
-                        <form method="post" action="{% url 'delete_recording' r.id %}" onsubmit="return confirm('Excluir esta gravação?');">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-sm btn-outline-danger">Excluir</button>
-                        </form>
-                    </div>
-                    {% else %}
-                    <p class="text-warning mt-2 mb-0">Arquivo indisponível (pode ter sido perdido após reinício do servidor).</p>
-                    {% endif %}
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="alert alert-info">Nenhuma gravação salva ainda. Entre numa consulta, inicie a ligação, clique em <strong>Gravar</strong> e depois <strong>Parar gravação</strong>.</div>
-    {% endif %}
-</div>
+<main class="md-main">
+  <div class="md-page-header">
+    <h2>Consultas gravadas</h2>
+    <p>Gravações das suas videochamadas.</p>
+  </div>
+
+  {% if recordings %}
+  <div class="md-recording-grid">
+    {% for r in recordings %}
+    <div class="md-card">
+      <div><strong>Sala</strong> {{ r.room.code }}</div>
+      {% if r.room.consulta %}
+      <div class="text-muted small">{{ r.room.consulta.label_especialidade }} — {{ r.room.consulta.data|date:'d/m/Y' }}</div>
+      {% endif %}
+      <div class="small mt-1">{{ r.uploaded_by.username }} · {{ r.duration_seconds }}s · {{ r.created_at|date:'d/m/Y H:i' }}</div>
+      {% if r.has_media %}
+      <video controls class="mt-3 w-100" style="border-radius:12px;background:#000;max-height:260px;">
+        <source src="{% url 'recording_playback' r.id %}" type="{{ r.mime_type|default:'video/webm' }}">
+      </video>
+      <div class="mt-2 d-flex gap-2">
+        <a class="btn btn-sm btn-md-outline" href="{% url 'recording_playback' r.id %}" download>Baixar</a>
+        <form method="post" action="{% url 'delete_recording' r.id %}" onsubmit="return confirm('Excluir?');">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-outline-danger">Excluir</button>
+        </form>
+      </div>
+      {% else %}
+      <p class="text-warning small mt-2">Arquivo indisponível.</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="md-card text-center py-5">
+    <p class="text-muted mb-0">Nenhuma gravação ainda. Na sala de vídeo: <strong>Gravar</strong> → <strong>Parar gravação</strong>.</p>
+  </div>
+  {% endif %}
+</main>
+
+{% include 'todos/_footer.html' %}
 </body>
 </html>

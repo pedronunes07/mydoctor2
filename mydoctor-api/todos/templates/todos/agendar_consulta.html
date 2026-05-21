@@ -1,43 +1,41 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agendar Consulta</title>
-    <link rel="stylesheet" href="{% static 'style_agendar.css' %}">
-    <link href="{% static 'bootstrap.min.css' %}" rel="stylesheet">
-    <link href="{% static 'style.css' %}" rel="stylesheet">
-</head>
+{% include 'todos/_head.html' with page_title='Agendar' %}
 <body>
 {% include 'todos/_navbar.html' with voltar_url=voltar_url %}
 {% include 'todos/_messages.html' %}
-<div class="agendar-container">
-    <h2>Agendar Consulta</h2>
+
+<main class="md-main">
+  <div class="agendar-container">
+    <h2>Agendar consulta</h2>
     <form class="agendar-form" method="post">
-        {% csrf_token %}
-        <label for="especialidade">Especialidade</label>
-        <select name="especialidade" id="especialidade" required>
-            <option value="">Selecione</option>
-            <option value="clinico">Clínico Geral</option>
-            <option value="pediatria">Pediatria</option>
-            <option value="ginecologia">Ginecologia</option>
-            <option value="cardiologia">Cardiologia</option>
-            <option value="dermatologia">Dermatologia</option>
-            <option value="ortopedia">Ortopedia</option>
-            <option value="otorrino">Otorrinolaringologia</option>
-            <option value="oftalmo">Oftalmologia</option>
-            <option value="neuro">Neurologia</option>
-            <option value="psiquiatria">Psiquiatria</option>
-        </select>
-        <label for="data">Data</label>
-        <input type="date" name="data" id="data" required>
-        <label for="hora">Hora</label>
-        <input type="time" name="hora" id="hora" required>
-        <label for="obs">Observações</label>
-        <textarea name="obs" id="obs" rows="3" placeholder="Observações (opcional)"></textarea>
-        <button type="submit" class="agendar-btn">Agendar</button>
+      {% csrf_token %}
+      <label for="especialidade">Especialidade</label>
+      <select name="especialidade" id="especialidade" required>
+        <option value="">Selecione</option>
+        <option value="clinico">Clínico Geral</option>
+        <option value="pediatria">Pediatria</option>
+        <option value="ginecologia">Ginecologia</option>
+        <option value="cardiologia">Cardiologia</option>
+        <option value="dermatologia">Dermatologia</option>
+        <option value="ortopedia">Ortopedia</option>
+        <option value="otorrino">Otorrinolaringologia</option>
+        <option value="oftalmo">Oftalmologia</option>
+        <option value="neuro">Neurologia</option>
+        <option value="psiquiatria">Psiquiatria</option>
+      </select>
+      <label for="data">Data</label>
+      <input type="date" name="data" id="data" required>
+      <label for="hora">Hora</label>
+      <input type="time" name="hora" id="hora" required>
+      <label for="obs">Observações</label>
+      <textarea name="obs" id="obs" rows="3" placeholder="Opcional"></textarea>
+      <button type="submit" class="agendar-btn">Confirmar agendamento</button>
     </form>
-</div>
+  </div>
+</main>
+
+{% include 'todos/_footer.html' %}
 </body>
 </html>

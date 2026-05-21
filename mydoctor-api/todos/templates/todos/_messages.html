@@ -1,7 +1,7 @@
 {% if messages %}
-<div class="container mt-3">
+<div class="md-main" style="padding-top:1rem;padding-bottom:0;max-width:720px;">
   {% for message in messages %}
-  <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %}" role="alert">
+  <div class="alert md-alert alert-{{ message.tags|default:'info' }} md-alert-{{ message.tags|default:'info' }}" role="alert">
     {{ message }}
   </div>
   {% endfor %}

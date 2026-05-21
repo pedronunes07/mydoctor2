@@ -1,77 +1,66 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard do Médico</title>
-    <link href="{% static 'bootstrap.min.css' %}" rel="stylesheet">
-    <link href="{% static 'style.css' %}" rel="stylesheet">
-</head>
+{% include 'todos/_head.html' with page_title='Painel Médico' %}
 <body>
 {% include 'todos/_navbar.html' with voltar_url=voltar_url %}
 {% include 'todos/_messages.html' %}
-<div class="container mt-4">
-    <h2 class="mb-3">Painel do Médico</h2>
-    <p class="text-muted">Receba agendamentos da sua especialidade, assuma consultas e inicie a videochamada com o paciente.</p>
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card text-bg-light mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Pendentes</h5>
-                    <span class="badge bg-warning text-dark">{{ pendentes|length }}</span>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card text-bg-light mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Minhas Consultas</h5>
-                    <span class="badge bg-primary">{{ consultas|length }}</span>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <a class="btn btn-outline-primary w-100 h-100 d-flex align-items-center justify-content-center" href="{% url 'doctor_recordings' %}">Ver gravações</a>
-        </div>
-    </div>
 
-    <h4>Consultas Pendentes (aguardando você)</h4>
-    <div class="list-group mb-4">
-        {% for c in pendentes %}
-        <div class="list-group-item">
-            <div class="d-flex w-100 justify-content-between">
-                <h5 class="mb-1">{{ c.label_especialidade }} — {{ c.usuario.get_full_name|default:c.usuario.username }}</h5>
-                <small>{{ c.data|date:'d/m/Y' }} {{ c.hora|time:'H:i' }}</small>
-            </div>
-            <p class="mb-1">{{ c.observacoes|default:'Sem observações' }}</p>
-            <div class="mt-2">
-                <a class="btn btn-success btn-sm" href="{% url 'doctor_accept_consulta' c.id %}">Assumir e preparar ligação</a>
-            </div>
-        </div>
-        {% empty %}
-        <p class="text-muted">Nenhuma consulta pendente para sua especialidade.</p>
-        {% endfor %}
-    </div>
+<main class="md-main">
+  <div class="md-page-header">
+    <h2>Painel do Médico</h2>
+    <p>Receba agendamentos, assuma consultas e inicie videochamadas.</p>
+  </div>
 
-    <h4>Minhas Consultas</h4>
-    <div class="list-group">
-        {% for c in consultas %}
-        <div class="list-group-item">
-            <div class="d-flex w-100 justify-content-between">
-                <h5 class="mb-1">{{ c.label_especialidade }} — {{ c.usuario.get_full_name|default:c.usuario.username }}</h5>
-                <small>{{ c.data|date:'d/m/Y' }} {{ c.hora|time:'H:i' }}</small>
-            </div>
-            <p class="mb-1">{{ c.observacoes|default:'Sem observações' }}</p>
-            <div class="mt-2 d-flex gap-2 flex-wrap">
-                <a class="btn btn-primary btn-sm" href="{% url 'entrar_consulta' c.id %}">Entrar na ligação</a>
-                <a class="btn btn-outline-secondary btn-sm" href="{% url 'create_receita' c.id %}">Emitir receita/atestado</a>
-            </div>
-        </div>
-        {% empty %}
-        <p class="text-muted">Nenhuma consulta atribuída a você ainda.</p>
-        {% endfor %}
+  <div class="md-stat-row">
+    <div class="md-stat-card">
+      <h5 class="text-muted mb-2">Pendentes</h5>
+      <span class="badge bg-warning">{{ pendentes|length }}</span>
     </div>
-</div>
+    <div class="md-stat-card">
+      <h5 class="text-muted mb-2">Minhas consultas</h5>
+      <span class="badge bg-primary">{{ consultas|length }}</span>
+    </div>
+    <div class="md-stat-card d-flex align-items-center justify-content-center">
+      <a class="btn btn-md-outline w-100" href="{% url 'doctor_recordings' %}">Ver gravações</a>
+    </div>
+  </div>
+
+  <h4 class="mb-3" style="font-size:1.5rem;">Consultas pendentes</h4>
+  <div class="list-group mb-5">
+    {% for c in pendentes %}
+    <div class="list-group-item">
+      <div class="d-flex w-100 justify-content-between flex-wrap">
+        <h5 class="mb-1">{{ c.label_especialidade }} — {{ c.usuario.get_full_name|default:c.usuario.username }}</h5>
+        <small class="text-muted">{{ c.data|date:'d/m/Y' }} {{ c.hora|time:'H:i' }}</small>
+      </div>
+      <p class="mb-2 text-muted">{{ c.observacoes|default:'Sem observações' }}</p>
+      <a class="btn btn-success btn-sm" href="{% url 'doctor_accept_consulta' c.id %}">Assumir consulta</a>
+    </div>
+    {% empty %}
+    <p class="text-muted">Nenhuma consulta pendente na sua especialidade.</p>
+    {% endfor %}
+  </div>
+
+  <h4 class="mb-3" style="font-size:1.5rem;">Minhas consultas</h4>
+  <div class="list-group">
+    {% for c in consultas %}
+    <div class="list-group-item">
+      <div class="d-flex w-100 justify-content-between flex-wrap">
+        <h5 class="mb-1">{{ c.label_especialidade }} — {{ c.usuario.get_full_name|default:c.usuario.username }}</h5>
+        <small class="text-muted">{{ c.data|date:'d/m/Y' }} {{ c.hora|time:'H:i' }}</small>
+      </div>
+      <div class="mt-2 d-flex gap-2 flex-wrap">
+        <a class="btn btn-md-primary btn-sm" href="{% url 'entrar_consulta' c.id %}">Entrar na ligação</a>
+        <a class="btn btn-md-outline btn-sm" href="{% url 'create_receita' c.id %}">Emitir receita</a>
+      </div>
+    </div>
+    {% empty %}
+    <p class="text-muted">Nenhuma consulta atribuída ainda.</p>
+    {% endfor %}
+  </div>
+</main>
+
+{% include 'todos/_footer.html' %}
 </body>
 </html>

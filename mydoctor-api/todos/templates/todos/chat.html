@@ -1,38 +1,18 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat com Médico</title>
-    <link rel="stylesheet" href="{% static 'bootstrap.min.css' %}">
-    <link rel="stylesheet" href="{% static 'style.css' %}">
-    <style>
-        body { background:#f7f9fc; }
-        .container-chat { max-width: 1100px; margin: 20px auto; }
-        .card { box-shadow: 0 6px 18px rgba(0,0,0,0.06); border: none; }
-        .video-wrapper { display:flex; gap: 10px; flex-wrap: wrap; }
-        video { width: 100%; max-height: 300px; background:#000; border-radius: 8px; }
-        #localVideo { transform: scaleX(-1); }
-        .video-col { flex:1 1 320px; }
-        #messages { height: 360px; overflow-y: auto; background:#fff; border-radius:8px; padding:10px; border:1px solid #e6ecf1; }
-        .msg { margin-bottom: 10px; }
-        .msg .sender { font-weight: 600; margin-right: 6px; }
-        .topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
-        .room-code { font-family: monospace; background:#eef3f8; padding:6px 10px; border-radius:6px; }
-    </style>
-</head>
+{% include 'todos/_head.html' with page_title='Consulta' %}
 <body>
-    {% include 'todos/_navbar.html' with voltar_url=voltar_url %}
-    {% include 'todos/_messages.html' %}
+{% include 'todos/_navbar.html' with voltar_url=voltar_url %}
+{% include 'todos/_messages.html' %}
 
-    <div class="container-chat">
-        <div class="topbar">
+<main class="md-main md-chat-wrap">
+        <div class="md-chat-topbar">
             <div></div>
             <div>
                 {% if room_code %}
                     <span>Você está na sala:</span>
-                    <span class="room-code" id="roomCodeText">{{ room_code }}</span>
+                    <span class="md-room-code" id="roomCodeText">{{ room_code }}</span>
                     <div class="mt-2 d-flex" style="gap:8px; align-items:center;">
                         <input id="inviteInput" type="text" class="form-control" style="max-width:480px" readonly value="{{ invite_url }}">
                         <button id="btnCopyInvite" class="btn btn-outline-primary">Copiar link</button>
@@ -129,7 +109,9 @@
                 </div>
             </div>
         </div>
-    </div>
+</main>
+
+{% include 'todos/_footer.html' %}
 
     <script>
     const roomCode = '{{ room_code|default:"" }}';

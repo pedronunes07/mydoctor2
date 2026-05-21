@@ -1,55 +1,48 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minhas Consultas</title>
-    <link rel="stylesheet" href="{% static 'style_dashboard.css' %}">
-    <link href="{% static 'bootstrap.min.css' %}" rel="stylesheet">
-    <link href="{% static 'style.css' %}" rel="stylesheet">
-</head>
+{% include 'todos/_head.html' with page_title='Minhas Consultas' %}
 <body>
 {% include 'todos/_navbar.html' with voltar_url=voltar_url %}
 {% include 'todos/_messages.html' %}
-<div class="dashboard-container">
-    <h2>Minhas Consultas</h2>
-    <p class="text-muted">Agende, acompanhe o médico e entre na videochamada quando a consulta estiver confirmada.</p>
-    <div class="mb-3">
-        <a href="{% url 'agendar_consulta' %}" class="btn btn-primary">+ Nova consulta</a>
+
+<main class="md-main" style="max-width:720px;">
+  <div class="md-page-header">
+    <h2>Minhas consultas</h2>
+    <p>Acompanhe agendamentos e entre na videochamada.</p>
+  </div>
+
+  <div class="mb-4 text-center">
+    <a href="{% url 'agendar_consulta' %}" class="btn btn-md-primary">+ Nova consulta</a>
+  </div>
+
+  {% if consultas %}
+  <div class="list-group">
+    {% for consulta in consultas %}
+    <div class="list-group-item md-card-accent">
+      <div class="d-flex justify-content-between flex-wrap gap-2">
+        <h5 class="mb-1">{{ consulta.label_especialidade }}</h5>
+        <small class="text-muted">{{ consulta.data|date:'d/m/Y' }} {{ consulta.hora|time:'H:i' }}</small>
+      </div>
+      {% if consulta.medico %}
+      <p class="mb-1 text-success">Dr(a). {{ consulta.medico.user.get_full_name|default:consulta.medico.user.username }}</p>
+      {% else %}
+      <p class="mb-1 text-warning">Aguardando médico</p>
+      {% endif %}
+      {% if consulta.observacoes %}<p class="small text-muted">{{ consulta.observacoes }}</p>{% endif %}
+      <a href="{% url 'entrar_consulta' consulta.id %}" class="btn btn-success btn-sm mt-2">Entrar na ligação</a>
+      {% if consulta.sala_chat_aberta %}<span class="badge bg-info ml-2">Sala aberta</span>{% endif %}
     </div>
-    {% if consultas %}
-        <div class="list-group">
-            {% for consulta in consultas %}
-            <div class="list-group-item">
-                <div class="d-flex w-100 justify-content-between flex-wrap gap-2">
-                    <h5 class="mb-1">{{ consulta.label_especialidade }}</h5>
-                    <small>{{ consulta.data|date:'d/m/Y' }} às {{ consulta.hora|time:'H:i' }}</small>
-                </div>
-                {% if consulta.medico %}
-                    <p class="mb-1 text-success">Médico: Dr(a). {{ consulta.medico.user.get_full_name|default:consulta.medico.user.username }}</p>
-                {% else %}
-                    <p class="mb-1 text-warning">Aguardando médico assumir a consulta</p>
-                {% endif %}
-                {% if consulta.observacoes %}
-                    <p class="mb-2"><small>{{ consulta.observacoes }}</small></p>
-                {% endif %}
-                <div class="d-flex gap-2 flex-wrap">
-                    <a href="{% url 'entrar_consulta' consulta.id %}" class="btn btn-success btn-sm">Entrar na ligação</a>
-                    {% if consulta.sala_chat_aberta %}
-                        <span class="badge bg-info align-self-center">Sala aberta</span>
-                    {% endif %}
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <p>Você ainda não possui consultas agendadas.</p>
-        <a href="{% url 'agendar_consulta' %}" class="btn btn-primary">Agendar primeira consulta</a>
-    {% endif %}
-    <div style="margin-top: 20px;">
-        <a href="{% url 'dashboard' %}" class="btn btn-secondary">Voltar</a>
-    </div>
-</div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="md-card text-center">
+    <p class="mb-3">Você ainda não tem consultas.</p>
+    <a href="{% url 'agendar_consulta' %}" class="btn btn-md-primary">Agendar primeira consulta</a>
+  </div>
+  {% endif %}
+</main>
+
+{% include 'todos/_footer.html' %}
 </body>
 </html>

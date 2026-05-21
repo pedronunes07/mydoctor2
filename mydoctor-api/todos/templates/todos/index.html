@@ -1,109 +1,62 @@
 {% load static %}
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
+<!DOCTYPE html>
+<html lang="pt-br">
+{% include 'todos/_head.html' with page_title='Início' %}
+<body>
+{% include 'todos/_navbar.html' %}
 
-    <title>My Doctor</title>
+<main>
+  <section class="md-hero">
+    <h1>Bem-vindo ao My Doctor</h1>
+    <p>Saúde de qualidade na palma da mão — consultas por vídeo, agendamento simples e atendimento humanizado.</p>
+    <a class="btn btn-lg btn-md-primary" href="{% url 'register' %}">Começar agora</a>
+    <a class="btn btn-lg btn-md-outline ml-2" href="{% url 'login' %}" style="color:#fff!important;border-color:#fff!important;">Entrar</a>
+  </section>
 
-    <!-- Bootstrap core CSS -->
-    <link href="{% static 'bootstrap.min.css' %}" rel="stylesheet">
-
-    <!-- Custom styles for this template -->
-    <link href="{% static 'style.css' %}" rel="stylesheet">
-  </head>
-
-  <body>
-    {% include 'todos/_navbar.html' %}
-
-    <main role="main">
-      <div class="jumbotron">
-        <div class="container">
-          <h1 class="display-3">Bem vindo(a) ao My Doctor</h1>
-          <p>No contexto atual, o acesso à saúde é uma necessidade crucial em meio a diversos
-            obstáculos. Surgindo como uma solução inovadora, o My Doctor é um aplicativo que
-            conecta usuários a profissionais de saúde com base em sua localização. 
-             A proposta do My Doctor, enfatizando sua importância na busca por
-            alternativas acessíveis e práticas na área da saúde. Analisando seu potencial
-            impacto na melhoria do acesso aos cuidados médicos, destacando a
-            importância de inovações como o My Doctor na promoção da equidade e eficácia
-            nos sistemas de saúde.</p>
-          <p><a class="btn btn-primary btn-lg" href="{% url 'register' %}" role="button">Criar conta &raquo;</a></p>
-        </div>
+  <div class="md-main">
+    <section id="perfil" class="md-feature-grid">
+      <div class="md-feature-card">
+        <img src="{% static 'hero-1.svg' %}" alt="Consultas por vídeo">
+        <h3>Consultas por vídeo</h3>
+        <p>Agende e fale com médicos em minutos, sem filas nem deslocamento.</p>
       </div>
-
-      <section id="perfil" class="perfil">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4 feature">
-                    <img src="{% static 'hero-1.svg' %}" alt="Atendimento online">
-                    <h3>Consultas por vídeo</h3>
-                    <p>Agende e fale com médicos em minutos, sem filas.</p>
-                </div>
-                <div class="col-md-4 feature">
-                    <img src="{% static 'hero-2.svg' %}" alt="Cuidado humano">
-                    <h3>Cuidado humanizado</h3>
-                    <p>Profissionais qualificados, atendimento acolhedor e seguro.</p>
-                </div>
-                <div class="col-md-4 feature">
-                    <img src="{% static 'hero-3.svg' %}" alt="Tecnologia e praticidade">
-                    <h3>Tecnologia e praticidade</h3>
-                    <p>Prontuário digital, lembretes e chat integrado.</p>
-                </div>
-            </div>
-        </div>
-      </section>
-
-      <section id="download" class="download">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-12">
-                    <h2>Experimente o My Doctor hoje mesmo!</h2>
-                    <div class="download-buttons">
-                        <a href="#" class="cta-button cta-button-android">Download para Android</a>
-                        <a href="#" class="cta-button cta-button-ios">Download para iOS</a>
-                    </div>
-                </div>
-            </div>
-        </div>
+      <div class="md-feature-card">
+        <img src="{% static 'hero-2.svg' %}" alt="Cuidado humanizado">
+        <h3>Cuidado humanizado</h3>
+        <p>Profissionais qualificados em um ambiente acolhedor e seguro.</p>
+      </div>
+      <div class="md-feature-card">
+        <img src="{% static 'hero-3.svg' %}" alt="Tecnologia">
+        <h3>Tecnologia integrada</h3>
+        <p>Chat, prontuário digital, receitas e gravações em um só lugar.</p>
+      </div>
     </section>
 
-      <div class="container" id="planos">
-        <div class="row">
-          <div class="col-md-4">
-            <h2>Precificação</h2>
-            <p>MyDoctor: Sua saúde na palma da mão, com um preço que cabe no bolso! 
-                Cansado de enfrentar filas, burocracias e longas esperas para cuidar da sua saúde? O MyDoctor chegou para revolucionar a forma como você se relaciona com os serviços médicos! </p>
-            <p><a class="btn btn-secondary" href="{% url 'login' %}" role="button">Entrar &raquo;</a></p>
-          </div>
-          <div class="col-md-4">
-            <h2>Funcionalidades</h2>
-            <p>Agendamento de consultas, integração com planos de saúde, perfil do usuário, Conteúdo educativo personalizado, chat com médicos, prontuário eletrônico, Inteligência artificial para diagnóstico, realidade aumentada para visualização de exames, integração com dispositivos vestíveis e mais! </p>
-            <p><a class="btn btn-secondary" href="{% url 'dashboard' %}" role="button">Ver serviços &raquo;</a></p>
-          </div>
-          <div class="col-md-4" id="seguranca">
-            <h2>Segurança</h2>
-            <p>Implementação de protocolos robustos de segurança: Garantindo a proteção de dados dos usuários e a confiabilidade do aplicativo, Testes rigorosos: Garantindo que o aplicativo funcione sem falhas e ofereça uma experiência impecável aos usuários.</p>
-            <p><a class="btn btn-secondary" href="{% url 'home' %}#seguranca" role="button">Saiba mais &raquo;</a></p>
-          </div>
-        </div>
+    <section class="md-cta-band">
+      <h2 style="font-size:2rem;margin-bottom:1rem;">Experimente o My Doctor</h2>
+      <p class="text-muted mb-0">Disponível na web — agende sua primeira consulta em poucos cliques.</p>
+    </section>
 
-        <hr>
-
+    <section id="planos" class="md-pricing-row">
+      <div class="md-pricing-card md-card-accent">
+        <h2>Precificação</h2>
+        <p class="text-muted">Planos acessíveis para cuidar da sua saúde sem burocracia.</p>
+        <a class="btn btn-md-primary mt-2" href="{% url 'register' %}">Criar conta</a>
       </div>
+      <div class="md-pricing-card">
+        <h2>Funcionalidades</h2>
+        <p class="text-muted">Agendamento, chat, receitas, gravações e painel do médico.</p>
+        <a class="btn btn-md-outline mt-2" href="{% url 'dashboard' %}">Ver serviços</a>
+      </div>
+      <div class="md-pricing-card" id="seguranca">
+        <h2>Segurança</h2>
+        <p class="text-muted">Protocolos de proteção de dados e ambiente criptografado (HTTPS).</p>
+        <a class="btn btn-md-outline mt-2" href="{% url 'home' %}#seguranca">Saiba mais</a>
+      </div>
+    </section>
+  </div>
+</main>
 
-    </main>
-
-    <footer class="container">
-      <p>&copy; My Doctor - 2024</p>
-    </footer>
-
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.12.0/js/mdb.min.js"></script>
-  </body>
+{% include 'todos/_footer.html' %}
+</body>
 </html>
