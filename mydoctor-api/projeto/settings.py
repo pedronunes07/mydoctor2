@@ -134,7 +134,10 @@ if _ON_VERCEL:
     if not _database_url:
         DATABASES['default']['NAME'] = '/tmp/db.sqlite3'
     MEDIA_ROOT = '/tmp/media'
+    SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
+    SESSION_SAVE_EVERY_REQUEST = True
     SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
     CSRF_COOKIE_SECURE = True
     WHITENOISE_USE_FINDERS = True
     CSRF_TRUSTED_ORIGINS = [

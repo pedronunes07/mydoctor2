@@ -61,6 +61,14 @@ class NumericInputTests(TestCase):
         self.assertContains(response, f'href="{reverse("dashboard")}"')
         self.assertContains(response, 'Voltar')
 
+    def test_logged_user_does_not_return_to_public_pages(self):
+        user = User.objects.create_user(username='paciente', password='SenhaForte123')
+        self.client.force_login(user)
+
+        for url_name in ('home', 'login', 'register'):
+            response = self.client.get(reverse(url_name))
+            self.assertRedirects(response, reverse('dashboard'))
+
     def test_logged_users_return_to_services_dashboard(self):
         doctor = User.objects.create_user(username='doctor-user', password='SenhaForte123')
         Medico.objects.create(user=doctor, crm='8888', especialidade='clinico')

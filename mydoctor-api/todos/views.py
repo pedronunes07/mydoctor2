@@ -59,6 +59,11 @@ class TodoCreateView(CreateView):
 class HomeView(TemplateView):
     template_name = 'todos/index.html'
 
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect(get_panel_url(request.user))
+        return super().dispatch(request, *args, **kwargs)
+
 def health_view(request):
     return JsonResponse({'status': 'ok'})
 
@@ -94,6 +99,8 @@ def dashboard_view(request):
     return render(request, 'todos/dashboard.html', context)
 
 def login_view(request):
+    if request.user.is_authenticated:
+        return redirect(get_panel_url(request.user))
     if request.method == 'POST':
         email = request.POST.get('email')
         crm = only_digits(request.POST.get('crm'))
@@ -125,6 +132,8 @@ def login_view(request):
     return render(request, 'todos/login.html', context)
 
 def register_view(request):
+    if request.user.is_authenticated:
+        return redirect(get_panel_url(request.user))
     if request.method == 'POST':
         username = request.POST['username']
         email = request.POST['email']
