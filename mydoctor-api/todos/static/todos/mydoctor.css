@@ -763,6 +763,21 @@ input[type="submit"].form-btn {
   max-width: 100%;
 }
 
+.md-call-status {
+  background: var(--md-teal-pale);
+  color: var(--md-navy);
+  border: 1px solid rgba(26, 107, 92, 0.2);
+  border-radius: var(--md-radius-sm);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.md-call-status[hidden] {
+  display: none !important;
+}
+
 /* —— Footer —— */
 .md-footer {
   text-align: center;

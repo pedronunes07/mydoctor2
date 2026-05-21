@@ -1,11 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
-{% if user.medico %}
-  {% url 'doctor_dashboard' as panel_url %}
-{% else %}
-  {% url 'dashboard' as panel_url %}
-{% endif %}
 {% include 'todos/_head.html' with page_title='Consulta' %}
 <body>
 {% include 'todos/_navbar.html' with voltar_url=panel_url %}
@@ -64,8 +59,9 @@
                 <div class="card">
                     <div class="card-header">Voz e Vídeo</div>
                     <div class="card-body">
+                        <div id="callStatus" class="md-call-status" role="status" hidden></div>
                         {% if room_code %}
-                        <p class="small text-muted mb-2">1) Inicie vídeo/áudio → 2) Clique <strong>Gravar</strong> → 3) <strong>Parar gravação</strong> para salvar (ou encerre a chamada).</p>
+                        <p class="small text-muted mb-2">1) Inicie vídeo/áudio → 2) Clique <strong>Gravar</strong> → 3) <strong>Parar gravação</strong> para salvar. <strong>Encerrar</strong> só finaliza a chamada — você permanece nesta sala.</p>
                         {% endif %}
                         <div id="incomingOffer" class="alert alert-info" style="display:none;">
                             <div class="d-flex justify-content-between align-items-center" style="gap:8px; flex-wrap:wrap;">
@@ -278,9 +274,9 @@
                 alert('Chamada recusada pelo outro participante.');
                 cleanupCall();
             } else if (s.type === 'end') {
-                if (!callEnded) {
-                    endCallSession({ notifyRemote: false, redirect: true, message: 'A outra parte encerrou a ligação.' });
-                }
+                if (Date.now() < ignoreEndSignalsUntil) continue;
+                if (!inCall && !pc && !localStream) continue;
+                endCallLocal({ notifyRemote: false, message: 'A outra parte encerrou a ligação.' });
             }
         }
     }
@@ -330,7 +326,7 @@
         return mix.getTracks().length ? mix : null;
     }
 
-    async function uploadRecordingBlob() {
+    async function uploadRecordingBlob(silent = false) {
         if (!recordedChunks.length) return false;
         const blob = new Blob(recordedChunks, { type: 'video/webm' });
         if (!blob.size) return false;
@@ -350,19 +346,21 @@
             alert('Falha ao salvar gravação: ' + (data.error || r.status));
             return false;
         }
-        alert('Gravação salva! Veja em Consultas Gravadas.');
+        if (!silent) {
+            showCallStatus('Gravação salva. Veja em Consultas Gravadas.');
+        }
         return true;
     }
 
-    function stopRecordingAndUpload() {
+    function stopRecordingAndUpload(silent = false) {
         return new Promise((resolve) => {
             if (!mediaRecorder || mediaRecorder.state === 'inactive') {
-                resolve(uploadRecordingBlob());
+                resolve(uploadRecordingBlob(silent));
                 return;
             }
             mediaRecorder.onstop = async () => {
                 uploadInProgress = true;
-                await uploadRecordingBlob();
+                await uploadRecordingBlob(silent);
                 uploadInProgress = false;
                 recordedChunks = [];
                 resolve(true);
@@ -371,7 +369,15 @@
         });
     }
 
-    let callEnded = false;
+    let endingCall = false;
+    let ignoreEndSignalsUntil = 0;
+
+    function showCallStatus(text) {
+        const el = document.getElementById('callStatus');
+        if (!el) return;
+        el.textContent = text;
+        el.hidden = false;
+    }
 
     function resetCallButtons() {
         inCall = false;
@@ -402,37 +408,32 @@
         resetCallButtons();
     }
 
-    async function endCallSession(opts = {}) {
+    async function endCallLocal(opts = {}) {
+        if (endingCall) return;
+        endingCall = true;
         const notifyRemote = opts.notifyRemote !== false;
-        const redirect = opts.redirect !== false;
-        if (callEnded) return;
-        callEnded = true;
 
-        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-            await stopRecordingAndUpload();
-        }
-
-        if (notifyRemote && roomCode) {
-            try {
-                await postSignal('end', { reason: 'hangup' });
-                await fetch(`/api/chat/${roomCode}/close/`, {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: { 'X-CSRFToken': getCookie('csrftoken') },
-                });
-            } catch (e) { console.warn(e); }
-        }
-
-        cleanupCall();
-
-        if (opts.message) {
-            alert(opts.message);
-        }
-
-        if (redirect && PANEL_URL) {
-            window.location.assign(PANEL_URL);
-        } else {
-            callEnded = false;
+        try {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                try {
+                    await Promise.race([
+                        stopRecordingAndUpload(true),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('upload timeout')), 10000)),
+                    ]);
+                } catch (e) {
+                    console.warn('Gravação ao encerrar:', e);
+                }
+            }
+            if (notifyRemote && roomCode) {
+                ignoreEndSignalsUntil = Date.now() + 8000;
+                try {
+                    await postSignal('end', { reason: 'hangup' });
+                } catch (e) { console.warn(e); }
+            }
+        } finally {
+            cleanupCall();
+            endingCall = false;
+            showCallStatus(opts.message || 'Ligação encerrada. Você continua na sala — pode chamar de novo ou voltar ao painel.');
         }
     }
 
@@ -450,10 +451,14 @@
         btnVideo.textContent = isVideoOff ? 'Vídeo ligar' : 'Vídeo on/off';
     }
 
-    const PANEL_URL = "{{ panel_url }}";
+    const PANEL_URL = "{{ panel_url|default:'' }}";
 
-    function goToPanel() {
-        cleanupCall();
+    async function goToPanel() {
+        if (inCall || pc || localStream) {
+            await endCallLocal({ notifyRemote: true, message: 'Ligação encerrada.' });
+        } else {
+            cleanupCall();
+        }
         if (PANEL_URL) {
             window.location.assign(PANEL_URL);
         }
@@ -474,9 +479,13 @@
         btnStart.addEventListener('click', goToPanel);
         btnStartVideo.addEventListener('click', () => startCall('video').catch(e => alert('Permita câmera/microfone: ' + e)));
         btnStartAudio.addEventListener('click', () => startCall('audio').catch(e => alert('Permita microfone: ' + e)));
-        btnHangup.addEventListener('click', () => {
-            if (!confirm('Encerrar a ligação e voltar ao painel?')) return;
-            endCallSession({ notifyRemote: true, redirect: true });
+        btnHangup.addEventListener('click', async () => {
+            if (!inCall && !pc && !localStream) {
+                showCallStatus('Nenhuma ligação ativa no momento.');
+                return;
+            }
+            if (!confirm('Encerrar a ligação? Você permanece nesta sala.')) return;
+            await endCallLocal({ notifyRemote: true });
         });
         btnMute.addEventListener('click', toggleMute);
         btnVideo.addEventListener('click', toggleVideo);
