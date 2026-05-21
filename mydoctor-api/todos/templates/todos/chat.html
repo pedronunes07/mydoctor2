@@ -13,9 +13,9 @@
                 {% if room_code %}
                     <span>Você está na sala:</span>
                     <span class="md-room-code" id="roomCodeText">{{ room_code }}</span>
-                    <div class="mt-2 d-flex" style="gap:8px; align-items:center;">
-                        <input id="inviteInput" type="text" class="form-control" style="max-width:480px" readonly value="{{ invite_url }}">
-                        <button id="btnCopyInvite" class="btn btn-outline-primary">Copiar link</button>
+                    <div class="md-invite-row">
+                        <input id="inviteInput" type="text" class="form-control" readonly value="{{ invite_url }}">
+                        <button type="button" id="btnCopyInvite" class="btn btn-md-outline">Copiar link</button>
                     </div>
                 {% else %}
                     {% if user.is_authenticated and user.medico %}
@@ -68,10 +68,10 @@
                                     <strong>Chamada recebida</strong>
                                     <span id="incomingType">(voz/vídeo)</span>
                                 </div>
-                                <div class="d-flex" style="gap:8px;">
-                                    <button id="btnAcceptVideo" class="btn btn-success btn-sm">Aceitar Vídeo</button>
-                                    <button id="btnAcceptAudio" class="btn btn-outline-success btn-sm">Aceitar Áudio</button>
-                                    <button id="btnDecline" class="btn btn-outline-danger btn-sm">Recusar</button>
+                                <div class="md-call-toolbar__row">
+                                    <button type="button" id="btnAcceptVideo" class="btn btn-success btn-sm">Aceitar vídeo</button>
+                                    <button type="button" id="btnAcceptAudio" class="btn btn-outline-success btn-sm">Aceitar áudio</button>
+                                    <button type="button" id="btnDecline" class="btn btn-outline-danger btn-sm">Recusar</button>
                                 </div>
                             </div>
                         </div>
@@ -83,15 +83,21 @@
                                 <video id="remoteVideo" autoplay playsinline></video>
                             </div>
                         </div>
-                        <div class="mt-3 d-flex gap-2">
-                            <button id="btnStartVideo" class="btn btn-success" {% if not room_code %}disabled{% endif %}>Iniciar Vídeo</button>
-                            <button id="btnStartAudio" class="btn btn-outline-success" {% if not room_code %}disabled{% endif %}>Iniciar Áudio</button>
-                            <button id="btnStart" class="btn btn-link" {% if not room_code %}disabled{% endif %}>Voltar ao Dashboard</button>
-                            <button id="btnHangup" class="btn btn-outline-danger" disabled>Encerrar</button>
-                            <button id="btnMute" class="btn btn-outline-secondary" disabled>Mutar</button>
-                            <button id="btnVideo" class="btn btn-outline-secondary" disabled>Vídeo on/off</button>
-                            <button id="btnRec" class="btn btn-outline-primary" disabled>Gravar</button>
-                            <button id="btnStopRec" class="btn btn-outline-warning" disabled>Parar gravação</button>
+                        <div class="md-call-toolbar">
+                            <div class="md-call-toolbar__row md-call-toolbar__row--start">
+                                <button type="button" id="btnStartVideo" class="btn btn-success" {% if not room_code %}disabled{% endif %}>Iniciar vídeo</button>
+                                <button type="button" id="btnStartAudio" class="btn btn-outline-success" {% if not room_code %}disabled{% endif %}>Iniciar áudio</button>
+                            </div>
+                            <div class="md-call-toolbar__row">
+                                <button type="button" id="btnMute" class="btn btn-outline-secondary" disabled>Mutar</button>
+                                <button type="button" id="btnVideo" class="btn btn-outline-secondary" disabled>Vídeo on/off</button>
+                                <button type="button" id="btnRec" class="btn btn-outline-primary" disabled>Gravar</button>
+                                <button type="button" id="btnStopRec" class="btn btn-outline-warning" disabled>Parar gravação</button>
+                            </div>
+                            <div class="md-call-toolbar__row md-call-toolbar__row--end">
+                                <button type="button" id="btnHangup" class="btn btn-outline-danger" disabled>Encerrar</button>
+                                <button type="button" id="btnStart" class="btn btn-md-outline" {% if not room_code %}disabled{% endif %}>Voltar ao painel</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -101,9 +107,9 @@
                     <div class="card-header">Chat de Texto</div>
                     <div class="card-body">
                         <div id="messages"></div>
-                        <div class="input-group mt-2">
+                        <div class="md-chat-compose">
                             <input id="msgInput" type="text" class="form-control" placeholder="Digite sua mensagem..." {% if not room_code %}disabled{% endif %}>
-                            <button id="sendBtn" class="btn btn-primary" {% if not room_code %}disabled{% endif %}>Enviar</button>
+                            <button type="button" id="sendBtn" class="btn btn-md-primary" {% if not room_code %}disabled{% endif %}>Enviar</button>
                         </div>
                     </div>
                 </div>

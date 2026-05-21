@@ -601,7 +601,11 @@ input[type="submit"].form-btn {
   border: 1px solid var(--md-border);
   border-radius: var(--md-radius);
   box-shadow: var(--md-shadow);
-  overflow: hidden;
+  overflow: visible;
+}
+
+.md-chat-wrap .card-body {
+  overflow: visible;
 }
 
 .md-chat-wrap .card-header {
@@ -668,6 +672,95 @@ input[type="submit"].form-btn {
   font-weight: 600;
   color: var(--md-teal);
   margin-right: 0.35rem;
+}
+
+/* Controles da chamada */
+.md-call-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.md-call-toolbar__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  width: 100%;
+}
+
+.md-call-toolbar__row--start {
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--md-border);
+}
+
+.md-call-toolbar__row--end {
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--md-border);
+}
+
+.md-call-toolbar .btn {
+  flex: 0 1 auto;
+  margin: 0 !important;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  line-height: 1.3;
+}
+
+.md-call-toolbar .btn:disabled {
+  opacity: 0.55;
+}
+
+.md-call-toolbar .btn-link {
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+}
+
+/* Chat: campo + enviar */
+.md-chat-compose {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+  align-items: stretch;
+  margin-top: 0.75rem;
+  width: 100%;
+}
+
+.md-chat-compose .form-control {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto !important;
+  margin: 0;
+  border-radius: var(--md-radius-sm);
+  border: 1px solid var(--md-border);
+  padding: 0.65rem 1rem;
+}
+
+.md-chat-compose .btn {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0.65rem 1.25rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.md-chat-wrap .md-invite-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+.md-chat-wrap .md-invite-row .form-control {
+  flex: 1 1 200px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 /* —— Footer —— */
